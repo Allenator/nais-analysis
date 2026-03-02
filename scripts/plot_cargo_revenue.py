@@ -358,6 +358,7 @@ def build_figure():
     )]
 
     fig.update_layout(
+        hoverlabel=dict(font=dict(size=12)),
         title=dict(
             text=f"NAIS Cargo Revenue per {AMOUNT} Units vs Distance<br>"
                  f"<sub>OpenTTD payment formula (four-regime time factor) · "

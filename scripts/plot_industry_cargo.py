@@ -461,6 +461,7 @@ def build_sankey_figure():
     ))
 
     fig.update_layout(
+        hoverlabel=dict(font=dict(size=12)),
         title=dict(
             text="NAIS Cargo Flow Network<br>"
                  "<sub>Primary (left) → cargo → secondary/tertiary (right) · "
@@ -539,7 +540,7 @@ def build_primary_figure():
             hovertemplate=("<b>Base</b><br>Min: %{customdata[0]}<br>"
                            "Weighted avg: %{customdata[1]}<br>"
                            "Max: %{customdata[2]}<extra>%{x}</extra>"),
-            hoverlabel=dict(bgcolor="rgba(100,149,237,0.9)", font_color="white"),
+            hoverlabel=dict(bgcolor="rgba(100,149,237,0.9)", font=dict(size=12, color="white")),
             showlegend=False,
         ))
 
@@ -569,7 +570,7 @@ def build_primary_figure():
             hovertemplate=("<b>L2 supply (3×)</b><br>Min: %{customdata[0]}<br>"
                            "Weighted avg: %{customdata[1]}<br>"
                            "Max: %{customdata[2]}<extra>%{x}</extra>"),
-            hoverlabel=dict(bgcolor="rgba(255,165,0,0.9)", font_color="white"),
+            hoverlabel=dict(bgcolor="rgba(255,165,0,0.9)", font=dict(size=12, color="white")),
             showlegend=False,
         ))
 
@@ -644,6 +645,7 @@ def build_primary_figure():
     all_annotations = best_annotations + cargo_label_annotations
 
     fig.update_layout(
+        hoverlabel=dict(font=dict(size=12)),
         title=dict(
             text="NAIS Primary Industry Production Ranges<br>"
                  "<sub>Grouped by cargo · Base production (blue) vs Level 2 supply boost ×3 (orange) · ★ = Best average (base/L2)</sub>",
@@ -780,6 +782,7 @@ def build_heatmap_figure():
         ))
 
     fig.update_layout(
+        hoverlabel=dict(font=dict(size=12)),
         title=dict(
             text="NAIS Secondary Industry Efficiency Heatmap<br>"
                  "<sub>Output per 8 units of input (all inputs present, normalized by # inputs) · ★ = Best producer</sub>",
@@ -889,6 +892,7 @@ def build_combo_figure():
             ))
 
     fig.update_layout(
+        hoverlabel=dict(font=dict(size=12)),
         title=dict(
             text="NAIS Secondary Industry Combinatory Boost<br>"
                  "<sub>Total output per 8 units of input (normalized by # inputs) · Solo (blue) vs all inputs present (orange)</sub>",
