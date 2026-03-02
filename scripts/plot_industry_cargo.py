@@ -468,7 +468,7 @@ def build_sankey_figure():
             font=dict(size=16),
         ),
         template="plotly_white",
-        height=1100,
+        height=1000,
         margin=dict(t=80, b=20, l=20, r=20),
     )
 
@@ -590,7 +590,7 @@ def build_primary_figure():
                     text=f"★ {r['avg_base']}/{r['avg_l2']}",
                     showarrow=False,
                     yshift=10,
-                    font=dict(size=9, color="darkred"),
+                    font=dict(size=10, color="darkred"),
                 ))
 
     # Build alternating background shading and cargo group labels
@@ -636,7 +636,7 @@ def build_primary_figure():
             y=label_y,
             text=f"<b>{cargo_name}</b><br>({cargo_label})",
             showarrow=False,
-            font=dict(size=8, color="rgba(80,80,80,0.9)"),
+            font=dict(size=10, color="rgba(80,80,80,0.9)"),
             yanchor="bottom",
         ))
         color_idx += 1
@@ -649,14 +649,14 @@ def build_primary_figure():
                  "<sub>Grouped by cargo · Base production (blue) vs Level 2 supply boost ×3 (orange) · ★ = Best average (base/L2)</sub>",
             font=dict(size=16),
         ),
-        xaxis=dict(title="Industry (cargo)", tickangle=-45, tickfont=dict(size=8)),
+        xaxis=dict(title=dict(text="Industry (cargo)", standoff=12), tickangle=-45, tickfont=dict(size=10)),
         yaxis=dict(title="Production per cycle", gridcolor="rgba(200,200,200,0.5)",
                    range=[0, y_range_top]),
         boxmode="group",
         template="plotly_white",
-        height=900,
+        height=1000,
         margin=dict(t=80, b=200, l=60, r=20),
-        legend=dict(orientation="h", yanchor="top", y=-0.18, xanchor="center", x=0.5, font=dict(size=10)),
+        legend=dict(orientation="h", yanchor="top", y=-0.15, xanchor="center", x=0.5, font=dict(size=10)),
         shapes=shapes,
         annotations=all_annotations,
     )
@@ -732,7 +732,7 @@ def build_heatmap_figure():
         text=hover_transposed,
         hovertemplate="%{text}<extra></extra>",
         colorscale="YlOrRd",
-        colorbar=dict(title="Output per<br>8 units input<br>(all present,<br>normalized)<br>&nbsp;"),
+        colorbar=dict(title=dict(text="Output per<br>8 units input<br>(all present,<br>normalized)<br>&nbsp;", font=dict(size=12))),
         xgap=2,
         ygap=2,
     ))
@@ -785,12 +785,12 @@ def build_heatmap_figure():
                  "<sub>Output per 8 units of input (all inputs present, normalized by # inputs) · ★ = Best producer</sub>",
             font=dict(size=16),
         ),
-        xaxis=dict(title="Industry", tickfont=dict(size=9), tickangle=-45, side="bottom",
+        xaxis=dict(title="Industry", tickfont=dict(size=10), tickangle=-45, side="bottom",
                    showgrid=False),
-        yaxis=dict(title="Output cargo", tickfont=dict(size=9),
+        yaxis=dict(title="Output cargo", tickfont=dict(size=10),
                    showgrid=False),
         template="plotly_white",
-        height=900,
+        height=1000,
         margin=dict(t=80, b=200, l=180, r=80),
         annotations=best_annotations,
         shapes=grid_shapes,
@@ -885,7 +885,7 @@ def build_combo_figure():
                 x=label, y=combined_totals[i],
                 text=f"+{boost:.0f}%",
                 showarrow=False, yshift=12,
-                font=dict(size=9, color="darkred"),
+                font=dict(size=10, color="darkred"),
             ))
 
     fig.update_layout(
@@ -894,13 +894,13 @@ def build_combo_figure():
                  "<sub>Total output per 8 units of input (normalized by # inputs) · Solo (blue) vs all inputs present (orange)</sub>",
             font=dict(size=16),
         ),
-        xaxis=dict(title="Industry", tickangle=-45, tickfont=dict(size=8)),
+        xaxis=dict(title=dict(text="Industry", standoff=0), tickangle=-45, tickfont=dict(size=10)),
         yaxis=dict(title="Total output per 8 units input", gridcolor="rgba(200,200,200,0.5)"),
         barmode="group",
         template="plotly_white",
-        height=900,
+        height=1000,
         margin=dict(t=80, b=200, l=60, r=20),
-        legend=dict(orientation="h", yanchor="top", y=-0.18, xanchor="center", x=0.5, font=dict(size=10)),
+        legend=dict(orientation="h", yanchor="top", y=-0.15, xanchor="center", x=0.5, font=dict(size=10)),
         annotations=annotations,
     )
     return fig

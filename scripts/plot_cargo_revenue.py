@@ -90,8 +90,6 @@ DAYS_PER_PERIOD = 2.5
 # transit_days = distance * KM_PER_TILE / (v * 24) = distance * DAY_FACTOR / v
 DAY_FACTOR = KM_PER_TILE / HOURS_PER_DAY  # ≈ 27.84
 
-NUM_CARGOS = len(CARGOS)
-
 
 def calc_transit_days(distance_tiles, speed_kmh):
     """Calculate transit time in game days."""
@@ -188,9 +186,9 @@ def build_figure():
 
     fig = go.Figure()
 
-    # Layout: for each speed, we create 2 * NUM_CARGOS traces:
-    #   first NUM_CARGOS = per-trip traces
-    #   next  NUM_CARGOS = per-day traces
+    # Layout: for each speed, we create 2 × len(CARGOS) traces:
+    #   first len(CARGOS) = per-trip traces
+    #   next  len(CARGOS) = per-day traces
     speed_mode_indices = {}
     trace_idx = 0
 
@@ -300,10 +298,14 @@ def build_figure():
         currentvalue=dict(
             prefix="Average Speed: ",
             suffix=" km/h",
-            font=dict(size=16),
+            font=dict(size=16, color="#374151"),
         ),
         pad=dict(t=100),
         steps=trip_steps,
+        bgcolor="#f9fafb",
+        bordercolor="#d1d5db",
+        activebgcolor="#f3f4f6",
+        font=dict(size=13, color="#374151"),
     )]
 
     # Toggle buttons — positioned below the plot, above the speed slider
@@ -311,7 +313,7 @@ def build_figure():
         type="buttons",
         direction="left",
         x=0.5,
-        y=-0.12,
+        y=-0.10,
         xanchor="center",
         yanchor="top",
         buttons=[
@@ -324,9 +326,11 @@ def build_figure():
                     {"yaxis.title.text": f"Revenue per trip (£, per {AMOUNT} units)",
                      "sliders": [dict(
                          active=default_speed_idx,
-                         currentvalue=dict(prefix="Average Speed: ", suffix=" km/h", font=dict(size=16)),
+                         currentvalue=dict(prefix="Average Speed: ", suffix=" km/h", font=dict(size=16, color="#374151")),
                          pad=dict(t=100),
                          steps=trip_steps,
+                         bgcolor="#f9fafb", bordercolor="#d1d5db",
+                         activebgcolor="#f3f4f6", font=dict(size=13, color="#374151"),
                      )]},
                 ],
             ),
@@ -339,16 +343,18 @@ def build_figure():
                     {"yaxis.title.text": f"Revenue per day (£/day, per {AMOUNT} units)",
                      "sliders": [dict(
                          active=default_speed_idx,
-                         currentvalue=dict(prefix="Average Speed: ", suffix=" km/h", font=dict(size=16)),
+                         currentvalue=dict(prefix="Average Speed: ", suffix=" km/h", font=dict(size=16, color="#374151")),
                          pad=dict(t=100),
                          steps=day_steps,
+                         bgcolor="#f9fafb", bordercolor="#d1d5db",
+                         activebgcolor="#f3f4f6", font=dict(size=13, color="#374151"),
                      )]},
                 ],
             ),
         ],
-        font=dict(size=13),
-        bgcolor="rgba(240,240,240,0.9)",
-        bordercolor="rgba(0,0,0,0.3)",
+        font=dict(size=13, color="#374151"),
+        bgcolor="#f9fafb",
+        bordercolor="#d1d5db",
     )]
 
     fig.update_layout(
@@ -375,13 +381,14 @@ def build_figure():
         sliders=sliders,
         updatemenus=updatemenus,
         legend=dict(
-            title="Cargo (click to toggle)",
+            title=dict(text="Cargo (click to toggle)", font=dict(size=12)),
             font=dict(size=10),
+            tracegroupgap=2,
             itemclick="toggle",
             itemdoubleclick="toggleothers",
         ),
         template="plotly_white",
-        height=900,
+        height=1000,
         margin=dict(b=180, t=80),
     )
 

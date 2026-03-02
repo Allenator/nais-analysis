@@ -11,7 +11,7 @@ Tabs:
   5. ⚡ Combo Boost — solo vs combined delivery comparison
 
 Reads:  data/nais_production_data.json (via plot_industry_cargo)
-Writes: figures/nais_dashboard.html
+Writes: dashboard/nais_dashboard.html
 """
 
 import json
@@ -349,8 +349,8 @@ def build_dashboard_html(
             top: 100%;
             right: 0;
             z-index: 200;
-            min-width: 420px;
-            max-width: 600px;
+            min-width: 520px;
+            max-width: 750px;
             padding: 12px 16px;
             background: white;
             border: 1px solid #d1d5db;
@@ -389,7 +389,7 @@ def build_dashboard_html(
             color: #374151;
         }}
         .filter-btn {{
-            padding: 4px 10px;
+            padding: 1px 5px;
             border: 1px solid #d1d5db;
             border-radius: 4px;
             background: white;
@@ -404,7 +404,7 @@ def build_dashboard_html(
             display: flex;
             flex-wrap: wrap;
             gap: 4px;
-            max-height: 150px;
+            max-height: 250px;
             overflow-y: auto;
         }}
         .filter-cb {{
@@ -540,7 +540,7 @@ def build_dashboard_html(
                     ys[i] = undefined;
                 }}
                 // Perturb first node slightly to trigger Plotly's snap rearrangement
-                ys[0] = 0.001;
+                xs[0] = 0.001;
                 Plotly.restyle(sankeyPlot, {{
                     'node.x': [xs],
                     'node.y': [ys]
@@ -658,7 +658,7 @@ if __name__ == "__main__":
     print("Building unified NAIS dashboard...")
     print()
 
-    print("  [1/5] Cargo Revenue chart...")
+    print("  [1/5] Cargo revenue chart...")
     fig_revenue = apply_theme(build_revenue_figure())
 
     print("  [2/5] Sankey cargo flow diagram...")
