@@ -383,7 +383,6 @@ def build_figure():
         template="plotly_white",
         height=900,
         margin=dict(b=180, t=80),
-        paper_bgcolor="white",
     )
 
     return fig

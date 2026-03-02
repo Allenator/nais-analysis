@@ -43,16 +43,15 @@ JSON_PATH = os.path.join(DATA_DIR, "nais_production_data.json")
 os.makedirs(FIGURES_DIR, exist_ok=True)
 
 # ── Unified theme applied to every figure ────────────────────────────────
-THEME = dict(
-    paper_bgcolor="#fafbfc",
-    plot_bgcolor="#ffffff",
-    font=dict(family='-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'),
-)
-
 ACCENT = "#2563eb"       # primary blue
 ACCENT_DARK = "#1d4ed8"  # darker blue for active state
 BG_LIGHT = "#fafbfc"     # page background
 
+THEME = dict(
+    paper_bgcolor=BG_LIGHT,
+    plot_bgcolor="rgba(0,0,0,0)",
+    font=dict(family='-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'),
+)
 
 def apply_theme(fig: go.Figure) -> go.Figure:
     """Apply the unified NAIS theme to a Plotly figure."""

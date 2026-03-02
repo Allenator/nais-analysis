@@ -470,7 +470,6 @@ def build_sankey_figure():
         template="plotly_white",
         height=1100,
         margin=dict(t=80, b=20, l=20, r=20),
-        paper_bgcolor="white",
     )
 
     sankey_meta = {
@@ -660,8 +659,6 @@ def build_primary_figure():
         legend=dict(orientation="h", yanchor="top", y=-0.18, xanchor="center", x=0.5, font=dict(size=10)),
         shapes=shapes,
         annotations=all_annotations,
-        paper_bgcolor="white",
-        plot_bgcolor="white",
     )
     return fig
 
@@ -797,8 +794,6 @@ def build_heatmap_figure():
         margin=dict(t=80, b=200, l=180, r=80),
         annotations=best_annotations,
         shapes=grid_shapes,
-        paper_bgcolor="white",
-        plot_bgcolor="white",
     )
     return fig
 
@@ -907,8 +902,6 @@ def build_combo_figure():
         margin=dict(t=80, b=200, l=60, r=20),
         legend=dict(orientation="h", yanchor="top", y=-0.18, xanchor="center", x=0.5, font=dict(size=10)),
         annotations=annotations,
-        paper_bgcolor="white",
-        plot_bgcolor="white",
     )
     return fig
 
