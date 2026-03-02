@@ -34,42 +34,114 @@ MAKEFILE = NAIS_ROOT / "Makefile"
 JSON_PATH = DATA_DIR / "nais_production_data.json"
 
 # ---------------------------------------------------------------------------
-# Production-mechanic constants (from NAIS global_constants / templates)
+# Production-mechanic constants — parsed from NAIS source files
 # ---------------------------------------------------------------------------
-RANDOM_FACTORS: list[tuple[int, int]] = [
-    (8, 1), (12, 1), (16, 4), (20, 3), (24, 2), (28, 1), (32, 1), (36, 1),
-]
+def _parse_random_factors(path: Path) -> list[tuple[int, int]]:
+    """Parse ``randomise_primary_production_on_build.pynml`` for (value, weight) pairs."""
+    src = path.read_text(encoding="utf-8")
+    return [(int(v), int(w)) for w, v in re.findall(r"(\d+):\s*return\s+(\d+);", src)]
+
+
+def _parse_global_constant(path: Path, name: str) -> int:
+    """Extract a named integer constant from ``global_constants.py``."""
+    src = path.read_text(encoding="utf-8")
+    m = re.search(rf"^{name}\s*=\s*(\d+)", src, re.MULTILINE)
+    if not m:
+        raise ValueError(f"Cannot find {name} in {path}")
+    return int(m.group(1))
+
+
+def _parse_header_params(path: Path) -> dict[str, int]:
+    """Extract ``def_value`` for named parameters from ``header.pynml``.
+
+    Returns a dict like ``{"primary_level1_produced_percent": 150, ...}``.
+    Only captures simple integer ``def_value`` lines (ignores template expressions).
+    """
+    src = path.read_text(encoding="utf-8")
+    params: dict[str, int] = {}
+    # Match: "param N { name { ... def_value: INT; ..."
+    for m in re.finditer(
+        r"param\s+\d+\s*\{\s*(\w+)\s*\{[^}]*?def_value:\s*(\d+)\s*;",
+        src, re.DOTALL,
+    ):
+        params[m.group(1)] = int(m.group(2))
+    return params
+
+
+TEMPLATES_DIR = NAIS_SRC / "templates"
+
+RANDOM_FACTORS = _parse_random_factors(TEMPLATES_DIR / "randomise_primary_production_on_build.pynml")
 TOTAL_WEIGHT = sum(w for _, w in RANDOM_FACTORS)
 WEIGHTED_AVG_FACTOR = sum(f * w for f, w in RANDOM_FACTORS) / TOTAL_WEIGHT
 
-LEVEL1_REQUIREMENT = 16   # FARM_MINE_SUPPLY_REQUIREMENT
-LEVEL2_REQUIREMENT = 80   # 5 × 16
-LEVEL1_PERCENT = 150
-LEVEL2_PERCENT = 300
+_FARM_MINE_REQ = _parse_global_constant(NAIS_SRC / "global_constants.py", "FARM_MINE_SUPPLY_REQUIREMENT")
+_header_params = _parse_header_params(TEMPLATES_DIR / "header.pynml")
 
-# Industry-type → base accept_cargo_types set by the class __init__
-# (overrides whatever the individual file passes)
-BASE_CLASS_ACCEPTS: dict[str, list[str] | None] = {
-    "IndustryPrimaryExtractive": ["ENSP"],
-    "IndustryPrimaryOrganic": ["FMSP", "ENSP"],
-    "IndustryPrimaryRanch": ["FICR", "ENSP"],
-    "IndustryPrimaryPort": None,        # uses kwargs directly
-    "IndustryPrimaryNoSupplies": None,   # no accept
-    "IndustryPrimaryTownProducer": None,
-    "IndustrySecondary": None,           # derived from processed_cargos_and_output_ratios
-    "IndustryTertiary": None,            # uses kwargs directly
-    "IndustryBank": None,                # uses kwargs directly
-}
+LEVEL1_REQUIREMENT = _FARM_MINE_REQ
+LEVEL2_REQUIREMENT = 5 * _FARM_MINE_REQ  # multiplier from header.pynml L2 def_value expression
+LEVEL1_PERCENT = _header_params["primary_level1_produced_percent"]
+LEVEL2_PERCENT = _header_params["primary_level2_produced_percent"]
 
-# Supply-requirement multiplier per type
-SUPPLY_MULTIPLIER: dict[str, int | None] = {
-    "IndustryPrimaryExtractive": 1,
-    "IndustryPrimaryOrganic": 1,
-    "IndustryPrimaryRanch": 1,
-    "IndustryPrimaryPort": 8,
-    "IndustryPrimaryNoSupplies": None,
-    "IndustryPrimaryTownProducer": None,
-}
+# ---------------------------------------------------------------------------
+# Parse base-class accept_cargo_types and supply_requirements from industry.py
+# ---------------------------------------------------------------------------
+def _parse_base_class_info(industry_py: Path) -> tuple[
+    dict[str, list[str] | None],   # class_name → accept_cargo_types or None
+    dict[str, int | None],         # class_name → supply multiplier or None
+]:
+    """Parse NAIS ``industry.py`` for per-class accept_cargo_types and supply multipliers.
+
+    Extracts from each class ``__init__``:
+      - ``kwargs['accept_cargo_types'] = [...]`` → list of cargo labels
+      - ``self.supply_requirements = [0, 'PREFIX', multiplier]`` → int multiplier
+      - ``self.supply_requirements = None`` → None
+    """
+    src = industry_py.read_text(encoding="utf-8")
+
+    # Split into class blocks: find each "class ClassName(...)" and its body
+    class_pattern = re.compile(
+        r"^class\s+(\w+)\s*\([^)]*\)\s*:",
+        re.MULTILINE,
+    )
+    class_starts = [(m.start(), m.group(1)) for m in class_pattern.finditer(src)]
+
+    accepts: dict[str, list[str] | None] = {}
+    supply_mult: dict[str, int | None] = {}
+
+    for i, (start, cls_name) in enumerate(class_starts):
+        end = class_starts[i + 1][0] if i + 1 < len(class_starts) else len(src)
+        block = src[start:end]
+
+        # accept_cargo_types set in __init__ via kwargs
+        act_m = re.search(
+            r"kwargs\s*\[\s*['\"]accept_cargo_types['\"]\s*\]\s*=\s*\[([^\]]*)\]",
+            block,
+        )
+        if act_m:
+            accepts[cls_name] = re.findall(r"'(\w+)'", act_m.group(1))
+        else:
+            accepts[cls_name] = None  # uses kwargs directly or no accept
+
+        # supply_requirements
+        sr_m = re.search(
+            r"self\.supply_requirements\s*=\s*(\[.*?\]|None)",
+            block,
+        )
+        if sr_m:
+            raw = sr_m.group(1)
+            if raw == "None":
+                supply_mult[cls_name] = None
+            else:
+                # Parse [0, 'PREFIX', multiplier]
+                nums = re.findall(r"\d+", raw)
+                supply_mult[cls_name] = int(nums[-1]) if nums else None
+        # If no supply_requirements line, leave it out (non-primary classes)
+
+    return accepts, supply_mult
+
+
+INDUSTRY_PY = NAIS_SRC / "industry.py"
+BASE_CLASS_ACCEPTS, SUPPLY_MULTIPLIER = _parse_base_class_info(INDUSTRY_PY)
 
 # Editorial enrichments for cargo names (parenthetical notes not in the lang file)
 CARGO_NAME_OVERRIDES: dict[str, str] = {

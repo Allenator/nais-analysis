@@ -41,7 +41,7 @@ def pretty(name: str) -> str:
     return name.replace("_", " ").title()
 
 
-# ── Consistent cargo color palette ──────────────────────────────────────
+# ── Consistent cargo color palette ───────────────────────────────────────
 ALL_CARGO_LABELS = sorted(CARGO_DEFS.keys())
 _palette = px.colors.qualitative.Dark24 + px.colors.qualitative.Light24
 CARGO_COLORS = {label: _palette[i % len(_palette)] for i, label in enumerate(ALL_CARGO_LABELS)}
@@ -267,13 +267,18 @@ def build_sankey_figure():
         idx = node_index[node_key]
         ind_type_label = ind_data["type"].replace("IndustryPrimary", "Primary · ")
         lines = [f"<b>{pretty(ind_name)}</b>", f"Type: {ind_type_label}"]
-        # Supply requirements
+        # Accepted cargos for supply boost
+        boost_cargos = [a for a in ind_data.get("accepts", []) if a.get("purpose") == "boost production"]
+        if boost_cargos:
+            cargo_list = ", ".join(f"{a['name']} ({a['label']})" for a in boost_cargos)
+            lines.append(f"Boosted by: {cargo_list}")
+        # Boost level thresholds
         sr = ind_data.get("supply_requirements")
         if sr:
-            lines.append(f"Supply boost: L1 ≥{sr['level1_threshold_3months']} → {sr['level1_production_percent']}%, "
+            lines.append(f"Boost levels: L1 ≥{sr['level1_threshold_3months']} → {sr['level1_production_percent']}%, "
                          f"L2 ≥{sr['level2_threshold_3months']} → {sr['level2_production_percent']}%")
         else:
-            lines.append("Supply boost: none (no supplies accepted)")
+            lines.append("Boost levels: none (no supplies accepted)")
         # Production per cargo
         lines.append("─── Production ───")
         for cargo_label, cargo_info in ind_data["produces"].items():
@@ -491,12 +496,24 @@ def build_primary_figure():
     """Build box-plot chart for primary industry production ranges."""
     rows = []
     for ind_name, ind_data in sorted(PRIMARY.items()):
+        boost_cargos = [a for a in ind_data.get("accepts", [])
+                        if a.get("purpose") == "boost production"]
+        boost_str = (", ".join(f"{a['name']} ({a['label']})" for a in boost_cargos)
+                     if boost_cargos else "None")
+        sr = ind_data.get("supply_requirements")
+        if sr:
+            levels_str = (f"L1 ≥{sr['level1_threshold_3months']} → {sr['level1_production_percent']}%, "
+                          f"L2 ≥{sr['level2_threshold_3months']} → {sr['level2_production_percent']}%")
+        else:
+            levels_str = "None"
         for cargo_label, cargo_info in ind_data["produces"].items():
             rows.append({
                 "industry": pretty(ind_name),
                 "cargo": cargo_info["cargo_name"],
                 "cargo_label": cargo_label,
                 "type": ind_data["type"],
+                "boost_cargos": boost_str,
+                "boost_levels": levels_str,
                 "min_base": cargo_info["production_range"]["min_base"],
                 "avg_base": cargo_info["production_range"]["weighted_average_base"],
                 "max_base": cargo_info["production_range"]["max_base"],
@@ -536,10 +553,13 @@ def build_primary_figure():
             y=[r[y_key] for r in rows],
             mode="markers",
             marker=dict(size=12, opacity=0, color="rgba(65,105,225,0.85)"),
-            customdata=[[r["min_base"], r["avg_base"], r["max_base"]] for r in rows],
-            hovertemplate=("<b>Base</b><br>Min: %{customdata[0]}<br>"
-                           "Weighted avg: %{customdata[1]}<br>"
-                           "Max: %{customdata[2]}<extra>%{x}</extra>"),
+            customdata=[[r["boost_cargos"], r["boost_levels"], r["min_base"], r["avg_base"], r["max_base"]] for r in rows],
+            hovertemplate=("<b>Base</b><br>"
+                           "Boosted by: %{customdata[0]}<br>"
+                           "Boost levels: %{customdata[1]}<br>"
+                           "Min: %{customdata[2]}<br>"
+                           "Weighted avg: %{customdata[3]}<br>"
+                           "Max: %{customdata[4]}<extra>%{x}</extra>"),
             hoverlabel=dict(bgcolor="rgba(100,149,237,0.9)", font=dict(size=12, color="white")),
             showlegend=False,
         ))
@@ -566,10 +586,13 @@ def build_primary_figure():
             y=[r[y_key] for r in rows],
             mode="markers",
             marker=dict(size=12, opacity=0, color="rgba(255,140,0,0.85)"),
-            customdata=[[r["min_l2"], r["avg_l2"], r["max_l2"]] for r in rows],
-            hovertemplate=("<b>L2 supply (3×)</b><br>Min: %{customdata[0]}<br>"
-                           "Weighted avg: %{customdata[1]}<br>"
-                           "Max: %{customdata[2]}<extra>%{x}</extra>"),
+            customdata=[[r["boost_cargos"], r["boost_levels"], r["min_l2"], r["avg_l2"], r["max_l2"]] for r in rows],
+            hovertemplate=("<b>L2 supply (3×)</b><br>"
+                           "Boosted by: %{customdata[0]}<br>"
+                           "Boost levels: %{customdata[1]}<br>"
+                           "Min: %{customdata[2]}<br>"
+                           "Weighted avg: %{customdata[3]}<br>"
+                           "Max: %{customdata[4]}<extra>%{x}</extra>"),
             hoverlabel=dict(bgcolor="rgba(255,165,0,0.9)", font=dict(size=12, color="white")),
             showlegend=False,
         ))
