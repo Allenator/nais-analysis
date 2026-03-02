@@ -267,18 +267,17 @@ def build_sankey_figure():
         idx = node_index[node_key]
         ind_type_label = ind_data["type"].replace("IndustryPrimary", "Primary · ")
         lines = [f"<b>{pretty(ind_name)}</b>", f"Type: {ind_type_label}"]
-        # Accepted cargos for supply
+        # Supply section
+        lines.append("─── Supply ───")
         supply_cargos = [a for a in ind_data.get("accepts", []) if a.get("purpose") == "boost production"]
-        if supply_cargos:
-            cargo_list = ", ".join(f"{a['name']} ({a['label']})" for a in supply_cargos)
-            lines.append(f"Supplied by: {cargo_list}")
-        # Supply level thresholds
         sr = ind_data.get("supply_requirements")
-        if sr:
-            lines.append(f"Supply levels: L1 ≥{sr['level1_threshold_3months']} → {sr['level1_production_percent']}%, "
+        if supply_cargos and sr:
+            cargo_list = ", ".join(f"{a['name']} ({a['label']})" for a in supply_cargos)
+            lines.append(f"  Supplied by: {cargo_list}")
+            lines.append(f"  Levels: L1 ≥{sr['level1_threshold_3months']} → {sr['level1_production_percent']}%, "
                          f"L2 ≥{sr['level2_threshold_3months']} → {sr['level2_production_percent']}%")
         else:
-            lines.append("Supply unavailable")
+            lines.append("  Supply unavailable")
         # Production per cargo
         lines.append("─── Production ───")
         for cargo_label, cargo_info in ind_data["produces"].items():
@@ -583,7 +582,7 @@ def build_primary_figure():
             customdata=[[r["supply_cargos"], r["supply_levels"], r["min_base"], r["avg_base"], r["max_base"]] for r in rows],
             hovertemplate=("<b>Base</b><br>"
                            "Supplied by: %{customdata[0]}<br>"
-                           "Supply levels: %{customdata[1]}<br>"
+                           "Levels: %{customdata[1]}<br>"
                            "Min: %{customdata[2]}<br>"
                            "Weighted avg: %{customdata[3]}<br>"
                            "Max: %{customdata[4]}<extra>%{x}</extra>"),
@@ -620,7 +619,7 @@ def build_primary_figure():
                          l2_label if r["has_supply"] else "Supply unavailable"] for r in rows],
             hovertemplate=("<b>%{customdata[5]}</b><br>"
                            "Supplied by: %{customdata[0]}<br>"
-                           "Supply levels: %{customdata[1]}<br>"
+                           "Levels: %{customdata[1]}<br>"
                            "Min: %{customdata[2]}<br>"
                            "Weighted avg: %{customdata[3]}<br>"
                            "Max: %{customdata[4]}<extra>%{x}</extra>"),
