@@ -24,7 +24,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-          token: ${{ secrets.NAIS_PAT }}
+          token: ${{ secrets.NAIS_ANALYSIS_GH_ACTIONS }}
 
       - uses: astral-sh/setup-uv@v5
 
