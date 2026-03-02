@@ -1,0 +1,3 @@
+[submodule "nais"]
+	path = nais
+	url = https://github.com/Allenator/nais.git

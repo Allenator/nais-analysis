@@ -1,0 +1,51 @@
+name: Deploy Dashboard to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.NAIS_PAT }}
+
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Install dependencies
+        run: |
+          uv venv .venv
+          uv pip install "plotly[express]"
+
+      - name: Generate data from NAIS source
+        run: .venv/bin/python scripts/generate_production_data.py --skip-validate
+
+      - name: Build dashboard
+        run: .venv/bin/python scripts/plot_dashboard.py
+
+      - name: Prepare pages artifact
+        run: |
+          mkdir -p _site
+          cp dashboard/nais_dashboard.html _site/index.html
+
+      - uses: actions/upload-pages-artifact@v3
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
