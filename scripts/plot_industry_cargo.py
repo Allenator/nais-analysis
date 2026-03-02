@@ -292,7 +292,7 @@ def build_sankey_figure():
         bp_lines = []
         for cl in node_best_cargos.get(node_key, []):
             cargo_name = CARGO_DEFS[cl]["name"] if cl in CARGO_DEFS else cl
-            bp_lines.append(f"★ Best primary producer of {cargo_name} ({cl})")
+            bp_lines.append(f"  ★ Best primary producer of {cargo_name} ({cl})")
         if bp_lines:
             lines.append("─── Best Producer ───")
             lines.extend(bp_lines)
@@ -348,7 +348,7 @@ def build_sankey_figure():
         bp_lines = []
         for cl in node_best_cargos.get(node_key, []):
             cargo_name = CARGO_DEFS[cl]["name"] if cl in CARGO_DEFS else cl
-            bp_lines.append(f"★ Best secondary producer of {cargo_name} ({cl})")
+            bp_lines.append(f"  ★ Best secondary producer of {cargo_name} ({cl})")
         if bp_lines:
             lines.append("─── Best Producer ───")
             lines.extend(bp_lines)
