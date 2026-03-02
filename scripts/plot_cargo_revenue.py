@@ -65,7 +65,7 @@ for _label, _cdef in sorted(
         continue  # skip cargos without payment data
     CARGOS.append((_cdef["name"], _label, _pf, _plb, _spl))
 
-# ── Constants ───────────────────────────────────────────────────────────
+# ── Constants ────────────────────────────────────────────────────────────
 MAX_DISTANCE_TILES = 4096
 DISTANCE_STEP = 8         # tile resolution for plotting
 AMOUNT = 100              # units of cargo delivered (for readable y-axis)
@@ -251,7 +251,7 @@ def build_figure():
                 fig.add_trace(go.Scatter(
                     x=distances,
                     y=ys,
-                    mode='lines',
+                    mode="lines",
                     name=f"{name}",
                     line=dict(color=CARGO_COLORS.get(label, "grey"), width=2),
                     visible=visible,
@@ -369,15 +369,15 @@ def build_figure():
         xaxis=dict(
             title="Distance (tiles)",
             range=[0, MAX_DISTANCE_TILES],
-            gridcolor='rgba(200,200,200,0.5)',
+            gridcolor="rgba(200,200,200,0.5)",
             zeroline=True,
-            zerolinecolor='rgba(0,0,0,0.3)',
+            zerolinecolor="rgba(0,0,0,0.3)",
         ),
         yaxis=dict(
             title=f"Revenue per trip (£, per {AMOUNT} units)",
-            gridcolor='rgba(200,200,200,0.5)',
+            gridcolor="rgba(200,200,200,0.5)",
             zeroline=True,
-            zerolinecolor='rgba(0,0,0,0.3)',
+            zerolinecolor="rgba(0,0,0,0.3)",
         ),
         sliders=sliders,
         updatemenus=updatemenus,
@@ -385,13 +385,12 @@ def build_figure():
             title=dict(text="Cargo (click to toggle)", font=dict(size=12)),
             font=dict(size=10),
             bgcolor="rgba(0,0,0,0)",
-            tracegroupgap=2,
+            tracegroupgap=0,
             itemclick="toggle",
             itemdoubleclick="toggleothers",
         ),
         template="plotly_white",
-        height=1000,
-        margin=dict(b=180, t=80),
+        margin=dict(b=10, t=80),
     )
 
     return fig

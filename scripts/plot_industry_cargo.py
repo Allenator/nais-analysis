@@ -15,6 +15,7 @@ Reads: data/nais_production_data.json
 
 import json
 import os
+from collections import defaultdict
 
 import plotly.graph_objects as go
 import plotly.express as px
@@ -469,8 +470,7 @@ def build_sankey_figure():
             font=dict(size=16),
         ),
         template="plotly_white",
-        height=1000,
-        margin=dict(t=80, b=20, l=20, r=20),
+        margin=dict(t=80, b=0, l=20, r=20),
     )
 
     sankey_meta = {
@@ -575,7 +575,6 @@ def build_primary_figure():
         ))
 
     # Highlight best (tied) producers per cargo type
-    from collections import defaultdict
     cargo_groups = defaultdict(list)
     for i, r in enumerate(rows):
         cargo_groups[r["cargo_label"]].append((i, r))
@@ -651,14 +650,13 @@ def build_primary_figure():
                  "<sub>Grouped by cargo · Base production (blue) vs Level 2 supply boost ×3 (orange) · ★ = Best average (base/L2)</sub>",
             font=dict(size=16),
         ),
-        xaxis=dict(title=dict(text="Industry (cargo)", standoff=12), tickangle=-45, tickfont=dict(size=10)),
+        xaxis=dict(title="Industry (cargo)", tickangle=-45, tickfont=dict(size=10)),
         yaxis=dict(title="Production per cycle", gridcolor="rgba(200,200,200,0.5)",
                    range=[0, y_range_top]),
         boxmode="group",
         template="plotly_white",
-        height=1000,
-        margin=dict(t=80, b=200, l=60, r=20),
-        legend=dict(orientation="h", yanchor="top", y=-0.15, xanchor="center", x=0.5, font=dict(size=10), bgcolor="rgba(0,0,0,0)"),
+        margin=dict(t=80, b=0, l=60, r=20),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(size=10), bgcolor="rgba(0,0,0,0)"),
         shapes=shapes,
         annotations=all_annotations,
     )
@@ -793,8 +791,7 @@ def build_heatmap_figure():
         yaxis=dict(title="Output cargo", tickfont=dict(size=10),
                    showgrid=False),
         template="plotly_white",
-        height=1000,
-        margin=dict(t=80, b=200, l=180, r=80),
+        margin=dict(t=80, b=0, l=180, r=80),
         annotations=best_annotations,
         shapes=grid_shapes,
     )
@@ -898,13 +895,12 @@ def build_combo_figure():
                  "<sub>Total output per 8 units of input (normalized by # inputs) · Solo (blue) vs all inputs present (orange)</sub>",
             font=dict(size=16),
         ),
-        xaxis=dict(title=dict(text="Industry", standoff=0), tickangle=-45, tickfont=dict(size=10)),
+        xaxis=dict(title="Industry", tickangle=-45, tickfont=dict(size=10)),
         yaxis=dict(title="Total output per 8 units input", gridcolor="rgba(200,200,200,0.5)"),
         barmode="group",
         template="plotly_white",
-        height=1000,
-        margin=dict(t=80, b=200, l=60, r=20),
-        legend=dict(orientation="h", yanchor="top", y=-0.15, xanchor="center", x=0.5, font=dict(size=10), bgcolor="rgba(0,0,0,0)"),
+        margin=dict(t=80, b=0, l=60, r=20),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(size=10), bgcolor="rgba(0,0,0,0)"),
         annotations=annotations,
     )
     return fig

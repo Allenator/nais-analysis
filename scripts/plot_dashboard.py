@@ -70,9 +70,9 @@ def get_nais_version() -> str:
 
 
 def _git_info(repo_path: str) -> str:
-    """Return a short commit description + dirty flag for a git repo.
+    """Return a short commit description + modified flag for a git repo.
 
-    Format: ``abc1234 (dirty)`` or ``abc1234`` (clean).
+    Format: ``abc1234 (modified)`` or ``abc1234`` (clean).
     Returns ``"unknown"`` on any failure.
     """
     try:
@@ -133,6 +133,8 @@ def build_dashboard_html(
             include_plotlyjs=False,
             full_html=False,
             div_id=f"plot-{tab_id}",
+            default_width="100%",
+            config={"responsive": True},
         )
         divs[tab_id] = div_html
 
@@ -148,7 +150,6 @@ def build_dashboard_html(
     sankey_filter_html = ""
     sankey_js_data = ""
     if sankey_meta:
-        import json as _json
         cargo_link_map = sankey_meta["cargo_link_map"]
         cargo_names = sankey_meta["cargo_names"]
         cargo_colors = sankey_meta["cargo_colors"]
@@ -218,8 +219,8 @@ def build_dashboard_html(
         """
 
         sankey_js_data = f"""
-        var sankeyCargoLinkMap = {_json.dumps(cargo_link_map)};
-        var sankeyIndustryLinkMap = {_json.dumps(industry_link_map)};
+        var sankeyCargoLinkMap = {json.dumps(cargo_link_map)};
+        var sankeyIndustryLinkMap = {json.dumps(industry_link_map)};
         """
 
     divs_html = ""
@@ -315,12 +316,16 @@ def build_dashboard_html(
             margin: 0 auto;
             padding: 12px 20px 24px;
             flex: 1;
+            min-height: 0;
+        }}
+        .plot-container > [id^="tab-"] {{
+            height: 100%;
         }}
         .plot-container .plotly-graph-div {{
             width: 100% !important;
         }}
 
-        /* ── Sankey filter (in tab bar, right-aligned) ───── */
+        /* ── Sankey filter (in tab bar, right-aligned) ──────── */
         .sankey-filter-wrapper {{
             position: absolute;
             right: 20px;
@@ -464,6 +469,57 @@ def build_dashboard_html(
         <a href="https://www.gnu.org/licenses/old-licenses/gpl-2.0.html">GPL v2</a>
     </div>
     <script>
+        // ── Viewport-adaptive plot sizing ─────────────────────────
+        function getPlotDimensions() {{
+            var header = document.querySelector('.header');
+            var tabBar = document.querySelector('.tab-bar');
+            var footer = document.querySelector('.footer');
+            var container = document.querySelector('.plot-container');
+            var usedHeight = (header ? header.offsetHeight : 0)
+                           + (tabBar ? tabBar.offsetHeight : 0)
+                           + (footer ? footer.offsetHeight : 0);
+            // Account for plot-container padding
+            var cs = container ? getComputedStyle(container) : null;
+            var padV = cs ? (parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom)) : 36;
+            var padH = cs ? (parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight)) : 40;
+            var h = Math.max(window.innerHeight - usedHeight - padV, 400);
+            var w = (container ? container.clientWidth : window.innerWidth) - padH;
+            return {{ height: h, width: w }};
+        }}
+
+        function resizePlot(plotDiv) {{
+            if (!plotDiv) return;
+            var dims = getPlotDimensions();
+            var h = dims.height;
+            var update = {{ height: h, width: dims.width }};
+            var plotId = plotDiv.id || '';
+
+            // Margins are fixed pixel values; convert paper-coordinate
+            // positions so UI elements stay at a fixed pixel offset from
+            // the plot area edge regardless of viewport height.
+            //   paper y = -(pixels below plot area) / plotAreaHeight
+
+            if (plotId === 'plot-revenue') {{
+                // margin: t=80, b=10
+                var plotArea = h - 80 - 10;
+                // Buttons: fixed 100px below plot area
+                update['updatemenus[0].y'] = -100 / Math.max(plotArea, 1);
+            }}
+
+            Plotly.relayout(plotDiv, update).then(function() {{
+                Plotly.Plots.resize(plotDiv);
+            }});
+        }}
+
+        function resizeVisiblePlot() {{
+            var visible = document.querySelector('.plot-container > [id^="tab-"][style*="display: block"], .plot-container > [id^="tab-"][style*="display:block"]');
+            if (!visible) return;
+            var plotDiv = visible.querySelector('.plotly-graph-div');
+            resizePlot(plotDiv);
+        }}
+
+        window.addEventListener('resize', resizeVisiblePlot);
+
         function switchTab(tabId) {{
             // Hide all tabs
             document.querySelectorAll('[id^="tab-"]').forEach(el => el.style.display = 'none');
@@ -480,12 +536,16 @@ def build_dashboard_html(
                 var dd = document.getElementById('sankey-filter-dropdown');
                 if (dd) dd.classList.remove('open');
             }}
-            // Trigger Plotly resize for proper rendering
+            // Resize plot to fill available viewport
             var plotDiv = document.querySelector('#tab-' + tabId + ' .plotly-graph-div');
-            if (plotDiv) {{
-                Plotly.Plots.resize(plotDiv);
-            }}
+            resizePlot(plotDiv);
         }}
+
+        // ── Initial viewport-adaptive resize on page load ─────────
+        document.addEventListener('DOMContentLoaded', function() {{
+            // Short delay to let Plotly finish initial render
+            setTimeout(resizeVisiblePlot, 100);
+        }});
 
         // ── Revenue plot: sync speed slider with trip/day toggle ──
         // After the Plotly updatemenus button resets the slider to default,
@@ -506,23 +566,24 @@ def build_dashboard_html(
             // After a button click (trip/day toggle), restore the slider position
             revPlot.on('plotly_buttonclicked', function(evt) {{
                 if (lastSliderIdx === null) return;
-                // The button just reset the slider to default; restore previous speed
-                setTimeout(function() {{
+                // The button just reset the slider to default; restore previous speed.
+                // Use requestAnimationFrame to run after Plotly finishes its own
+                // button-click relayout, then apply trace visibility + slider
+                // index in a single Plotly.update call to avoid double re-render.
+                requestAnimationFrame(function() {{
                     var layout = revPlot.layout;
                     if (layout.sliders && layout.sliders[0] && layout.sliders[0].steps) {{
                         var step = layout.sliders[0].steps[lastSliderIdx];
                         if (step) {{
-                            // Apply the step's args to restore the correct speed traces
-                            Plotly.update(revPlot, step.args[0], {{}});
-                            // Update the slider's active index visually
-                            Plotly.relayout(revPlot, {{'sliders[0].active': lastSliderIdx}});
+                            Plotly.update(revPlot, step.args[0],
+                                          {{'sliders[0].active': lastSliderIdx}});
                         }}
                     }}
-                }}, 50);
+                }});
             }});
         }});
 
-        // ── Sankey: perturb a node on initial load to trigger rearrangement ──
+        // ── Sankey: perturb node on load to trigger rearrangement ─
         document.addEventListener('DOMContentLoaded', function() {{
             var sankeyPlot = document.getElementById('plot-sankey');
             if (!sankeyPlot || !sankeyPlot.data || !sankeyPlot.data[0]) return;
@@ -548,7 +609,7 @@ def build_dashboard_html(
             }}, 200);
         }});
 
-        // ── Sankey cargo filtering ──────────────────────────────
+        // ── Sankey cargo filtering ─────────────────────────────────
         {sankey_js_data}
         var sankeyOriginalValues = null;
         var sankeyOriginalColors = null;
@@ -629,7 +690,7 @@ def build_dashboard_html(
             }});
         }}
 
-        // ── Filter dropdown toggle (click-based) ───────────
+        // ── Filter dropdown toggle (click-based) ───────────────────
         function toggleFilterDropdown(e) {{
             if (e) e.stopPropagation();
             var dd = document.getElementById('sankey-filter-dropdown');
