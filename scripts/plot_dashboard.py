@@ -50,7 +50,7 @@ BG_LIGHT = "#fafbfc"     # page background
 THEME = dict(
     paper_bgcolor=BG_LIGHT,
     plot_bgcolor="rgba(0,0,0,0)",
-    font=dict(family='-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'),
+    font=dict(family='-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'),
 )
 
 def apply_theme(fig: go.Figure) -> go.Figure:

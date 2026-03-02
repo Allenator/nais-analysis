@@ -740,6 +740,14 @@ def build_heatmap_figure():
     # Highlight the best producer for each cargo (each row in transposed matrix)
     x_labels = [pretty(n) for n in industries]
     y_labels = [f"{CARGO_DEFS[l]['name']} ({l})" for l in all_output_labels]
+
+    # Determine global value range for adaptive star text color.
+    # On the YlOrRd colorscale, low values map to light yellow (needs dark
+    # text) and high values map to dark red (needs white text).
+    all_vals = [v for row in z_transposed for v in row if v is not None and v > 0]
+    z_min = min(all_vals) if all_vals else 0
+    z_max = max(all_vals) if all_vals else 1
+
     best_annotations = []
     for cargo_idx, cargo_row in enumerate(z_transposed):
         positive = [v for v in cargo_row if v is not None and v > 0]
@@ -749,12 +757,16 @@ def build_heatmap_figure():
         # Find ALL industries tied for best producer of this cargo
         for ind_idx, val in enumerate(cargo_row):
             if val is not None and val == max_val:
+                # Pick star color based on tile brightness: light tiles
+                # (low values on YlOrRd) get dark text, dark tiles get white.
+                frac = (max_val - z_min) / (z_max - z_min) if z_max > z_min else 1
+                star_color = "white" if frac > 0.35 else "#2a3f5f"
                 best_annotations.append(dict(
                     x=x_labels[ind_idx],
                     y=y_labels[cargo_idx],
-                    text=f"★ {round(max_val)}",
+                    text=f"<b>★ {round(max_val)}</b>",
                     showarrow=False,
-                    font=dict(size=10, color="white", family="Arial Black"),
+                    font=dict(size=10, color=star_color),
                 ))
 
     # Build grid-line shapes at cell boundaries (half-tick offsets)
