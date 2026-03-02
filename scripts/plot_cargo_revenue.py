@@ -201,11 +201,11 @@ def build_figure():
                 if mode == "trip":
                     ys = [revenue_per_trip(d, speed, pf, plb, spl) for d in distances]
                     y_label = "Revenue"
-                    y_unit = "£"
+                    y_fmt = "£%{y:,.1f}"
                 else:
                     ys = [revenue_per_day(d, speed, pf, plb, spl) for d in distances]
                     y_label = "Revenue/day"
-                    y_unit = "£/day"
+                    y_fmt = "%{y:,.1f} £/day"
 
                 tp_values = [calc_transit_periods(d, speed) if d > 0 else 0 for d in distances]
                 td_values = [calc_transit_days(d, speed) if d > 0 else 0 for d in distances]
@@ -241,7 +241,7 @@ def build_figure():
                 # Revenue section (dynamic per-point data)
                 hover_lines.append("─── Revenue ───")
                 hover_lines.append(f"  Distance: %{{x}} tiles")
-                hover_lines.append(f"  {y_label}: {y_unit}%{{y:,.1f}}")
+                hover_lines.append(f"  {y_label}: {y_fmt}")
                 hover_lines.append(f"  Speed: {speed} km/h")
                 hover_lines.append(
                     f"  Transit: %{{customdata[0]:.1f}} days "
@@ -321,7 +321,7 @@ def build_figure():
                 args=[
                     {"visible": make_visibility(SPEED_DEFAULT, "trip"),
                      "showlegend": make_visibility(SPEED_DEFAULT, "trip")},
-                    {"yaxis.title.text": f"Revenue per Trip (£, per {AMOUNT} units)",
+                    {"yaxis.title.text": f"Revenue per trip (£, per {AMOUNT} units)",
                      "sliders": [dict(
                          active=default_speed_idx,
                          currentvalue=dict(prefix="Average Speed: ", suffix=" km/h", font=dict(size=16)),
@@ -336,7 +336,7 @@ def build_figure():
                 args=[
                     {"visible": make_visibility(SPEED_DEFAULT, "day"),
                      "showlegend": make_visibility(SPEED_DEFAULT, "day")},
-                    {"yaxis.title.text": f"Revenue per Day (£/day, per {AMOUNT} units)",
+                    {"yaxis.title.text": f"Revenue per day (£/day, per {AMOUNT} units)",
                      "sliders": [dict(
                          active=default_speed_idx,
                          currentvalue=dict(prefix="Average Speed: ", suffix=" km/h", font=dict(size=16)),
@@ -356,7 +356,7 @@ def build_figure():
             text=f"NAIS Cargo Revenue per {AMOUNT} Units vs Distance<br>"
                  f"<sub>OpenTTD payment formula (four-regime time factor) · "
                  f"100 km/h ≈ 3.6 tiles/day · "
-                 f"1 aging period = 2.5 days · no inflation</sub>",
+                 f"1 aging period = 2.5 days · No inflation</sub>",
             font=dict(size=16),
         ),
         xaxis=dict(
@@ -367,7 +367,7 @@ def build_figure():
             zerolinecolor='rgba(0,0,0,0.3)',
         ),
         yaxis=dict(
-            title=f"Revenue per Trip (£, per {AMOUNT} units)",
+            title=f"Revenue per trip (£, per {AMOUNT} units)",
             gridcolor='rgba(200,200,200,0.5)',
             zeroline=True,
             zerolinecolor='rgba(0,0,0,0.3)',

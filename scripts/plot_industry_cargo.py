@@ -182,7 +182,7 @@ def build_sankey_figure():
             links_value.append(max(avg_prod * PRIMARY_SCALE, 1))
             links_cargo_labels.append(cargo_label)
             links_industry.append(ind_name)
-            links_label.append(f"{pretty(ind_name)} → {cargo_info['cargo_name']}: ~{avg_prod} per cycle (weighted avg)")
+            links_label.append(f"{pretty(ind_name)} → {cargo_info['cargo_name']}: ~{avg_prod} per cycle (weighted average)")
 
             # Track best primary producer (all tied winners get stars)
             bp = best_producers.get(cargo_label, {})
@@ -303,7 +303,7 @@ def build_sankey_figure():
         input_labels = [inp["label"] for inp in ind_data["input_cargos"]]
         n_inputs = len(input_labels)
         lines = [f"<b>{pretty(ind_name)}</b>", f"Type: Secondary"]
-        lines.append(f"Combo boost: {'YES – delivering multiple cargos boosts output' if has_combo else 'No – each cargo processed independently'}")
+        lines.append(f"Combo boost: {'Yes – delivering multiple cargos boosts output' if has_combo else 'No – each cargo processed independently'}")
         # Input ratios
         lines.append("─── Inputs ───")
         for inp in ind_data["input_cargos"]:
@@ -312,7 +312,7 @@ def build_sankey_figure():
         scenarios = ind_data["production_per_8_units_input"]
         all_key = "+".join(input_labels)
         all_scenario = scenarios.get(all_key, {})
-        lines.append("─── Output per 8 units input ───")
+        lines.append("─── Output per 8 Units Input ───")
         for out in ind_data["output_cargos"]:
             ol = out["label"]
             # Solo values
@@ -464,7 +464,7 @@ def build_sankey_figure():
         title=dict(
             text="NAIS Cargo Flow Network<br>"
                  "<sub>Primary (left) → Cargo → Secondary/Tertiary (right) · "
-                 "★ = best producer per tier · Link thickness ∝ output · Drag nodes to rearrange</sub>",
+                 "★ = Best producer per tier · Link thickness ∝ output · Drag nodes to rearrange</sub>",
             font=dict(size=16),
         ),
         template="plotly_white",
@@ -538,15 +538,15 @@ def build_primary_figure():
             marker=dict(size=12, opacity=0, color="rgba(65,105,225,0.85)"),
             customdata=[[r["min_base"], r["avg_base"], r["max_base"]] for r in rows],
             hovertemplate=("<b>Base</b><br>Min: %{customdata[0]}<br>"
-                           "Weighted Avg: %{customdata[1]}<br>"
+                           "Weighted avg: %{customdata[1]}<br>"
                            "Max: %{customdata[2]}<extra>%{x}</extra>"),
             hoverlabel=dict(bgcolor="rgba(100,149,237,0.9)", font_color="white"),
             showlegend=False,
         ))
 
-    # L2 Supply production box plot (orange) — pre-computed statistics
+    # L2 supply production box plot (orange) — pre-computed statistics
     fig.add_trace(go.Box(
-        name="L2 Supply (3×)",
+        name="L2 supply (3×)",
         x=x_labels,
         lowerfence=[r["min_l2"] for r in rows],
         q1=[r["min_l2"] for r in rows],
@@ -561,14 +561,14 @@ def build_primary_figure():
     # Invisible scatter points at min, avg, max for L2 hover across the full box
     for y_key in ("min_l2", "avg_l2", "max_l2"):
         fig.add_trace(go.Scatter(
-            name="L2 Supply (3×)",
+            name="L2 supply (3×)",
             x=x_labels,
             y=[r[y_key] for r in rows],
             mode="markers",
             marker=dict(size=12, opacity=0, color="rgba(255,140,0,0.85)"),
             customdata=[[r["min_l2"], r["avg_l2"], r["max_l2"]] for r in rows],
-            hovertemplate=("<b>L2 Supply (3×)</b><br>Min: %{customdata[0]}<br>"
-                           "Weighted Avg: %{customdata[1]}<br>"
+            hovertemplate=("<b>L2 supply (3×)</b><br>Min: %{customdata[0]}<br>"
+                           "Weighted avg: %{customdata[1]}<br>"
                            "Max: %{customdata[2]}<extra>%{x}</extra>"),
             hoverlabel=dict(bgcolor="rgba(255,165,0,0.9)", font_color="white"),
             showlegend=False,
@@ -647,11 +647,11 @@ def build_primary_figure():
     fig.update_layout(
         title=dict(
             text="NAIS Primary Industry Production Ranges<br>"
-                 "<sub>Grouped by cargo · Base production (blue) vs Level 2 Supply boost ×3 (orange) · ★ = best avg (base/L2)</sub>",
+                 "<sub>Grouped by cargo · Base production (blue) vs Level 2 supply boost ×3 (orange) · ★ = Best average (base/L2)</sub>",
             font=dict(size=16),
         ),
-        xaxis=dict(title="Industry (Cargo)", tickangle=-45, tickfont=dict(size=8)),
-        yaxis=dict(title="Production per Cycle", gridcolor="rgba(200,200,200,0.5)",
+        xaxis=dict(title="Industry (cargo)", tickangle=-45, tickfont=dict(size=8)),
+        yaxis=dict(title="Production per cycle", gridcolor="rgba(200,200,200,0.5)",
                    range=[0, y_range_top]),
         boxmode="group",
         template="plotly_white",
@@ -735,7 +735,7 @@ def build_heatmap_figure():
         text=hover_transposed,
         hovertemplate="%{text}<extra></extra>",
         colorscale="YlOrRd",
-        colorbar=dict(title="Output per<br>8 units input<br>(all present,<br>normalized)"),
+        colorbar=dict(title="Output per<br>8 units input<br>(all present,<br>norm.)"),
         zmin=0,
     ))
 
@@ -763,11 +763,11 @@ def build_heatmap_figure():
     fig.update_layout(
         title=dict(
             text="NAIS Secondary Industry Output Heatmap<br>"
-                 "<sub>Output per 8 units of input (all inputs present, normalized by # inputs) · ★ = best producer</sub>",
+                 "<sub>Output per 8 units of input (all inputs present, normalized by # inputs) · ★ = Best producer</sub>",
             font=dict(size=16),
         ),
         xaxis=dict(title="Industry", tickfont=dict(size=9), tickangle=-45, side="bottom"),
-        yaxis=dict(title="Output Cargo", tickfont=dict(size=9)),
+        yaxis=dict(title="Output cargo", tickfont=dict(size=9)),
         template="plotly_white",
         height=900,
         margin=dict(t=80, b=200, l=180, r=80),
@@ -844,13 +844,13 @@ def build_combo_figure():
     fig = go.Figure()
 
     fig.add_trace(go.Bar(
-        name="Solo Delivery (single input at a time)",
+        name="Solo delivery (single input at a time)",
         x=x_labels, y=solo_totals,
         marker_color="rgba(100,149,237,0.75)",
         hovertemplate="%{x}<br>Solo output per 8 input: %{y}<extra></extra>",
     ))
     fig.add_trace(go.Bar(
-        name="All Inputs Combined (delivered together)",
+        name="All inputs combined (delivered together)",
         x=x_labels, y=combined_totals,
         marker_color="rgba(255,140,0,0.85)",
         hovertemplate="%{x}<br>Combined output per 8 input: %{y}<br>Boost: %{customdata:.0f}%<extra></extra>",
@@ -875,7 +875,7 @@ def build_combo_figure():
             font=dict(size=16),
         ),
         xaxis=dict(title="Industry", tickangle=-45, tickfont=dict(size=8)),
-        yaxis=dict(title="Total output per 8 units input (normalized)", gridcolor="rgba(200,200,200,0.5)"),
+        yaxis=dict(title="Total output per 8 units input", gridcolor="rgba(200,200,200,0.5)"),
         barmode="group",
         template="plotly_white",
         height=900,
