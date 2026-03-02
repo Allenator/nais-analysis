@@ -9,10 +9,10 @@ Interactive analysis and visualization of the [NAIS (North American Industry Set
 | Tab | Description |
 |-----|-------------|
 | 💰 **Cargo Revenue** | Revenue vs distance curves for all 30 cargo types, with a speed slider (10–300 km/h) and per-trip / per-day toggle. Implements the full OpenTTD four-regime payment formula. |
-| 🔀 **Cargo Flow (Sankey)** | Full cargo flow network: Primary → Cargo → Secondary/Tertiary. Nodes show detailed hover info (production rules, combo boost, payment properties). Filterable by cargo and industry. |
-| 📊 **Primary Production** | Box plots of base and Level 2 supply-boosted production ranges for every primary industry, grouped by cargo type. |
-| 🔥 **Secondary Heatmap** | Efficiency heatmap — output per 8 units of input (all inputs present, normalized by number of inputs) for every secondary industry. |
-| ⚡ **Combo Boost** | Side-by-side comparison of solo vs combined delivery output, highlighting the combinatory boost percentage for each secondary industry. |
+| 🔀 **Cargo Flow (Sankey)** | Full cargo flow network: Primary → cargo → secondary/tertiary. Nodes show detailed hover info (production rules, combo boost, payment properties). Filterable by cargo and industry. |
+| 📊 **Primary Production Ranges** | Box plots of base and Level 2 supply-boosted production ranges for every primary industry, grouped by cargo type. |
+| 🔥 **Secondary Efficiency Heatmap** | Efficiency heatmap — output per 8 units of input (all inputs present, normalized by number of inputs) for every secondary industry. |
+| ⚡ **Combo Boost Comparison** | Side-by-side comparison of solo vs combined delivery output, highlighting the combinatory boost percentage for each secondary industry. |
 
 ## Project Structure
 
