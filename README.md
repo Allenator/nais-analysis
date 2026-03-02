@@ -19,18 +19,22 @@ Interactive analysis and visualization of the [NAIS (North American Industry Set
 ```
 ├── nais/
 │   └── NAIS - NORTH AMERICAN INDUSTRY SET/   # NAIS source (git submodule)
+│       ├── Makefile                 # NAIS version (REPO_VERSION)
 │       └── src/
-│           ├── cargos/          # Cargo definitions (payment, classes, weight, …)
-│           ├── industries/      # Industry definitions (ratios, boost flags, …)
-│           └── lang/            # String tables (english.lng)
+│           ├── cargos/              # Cargo definitions (payment, classes, weight, …)
+│           ├── industries/          # Industry definitions (ratios, boost flags, …)
+│           ├── templates/           # NML templates (random factors, header params)
+│           ├── lang/                # String tables (english.lng)
+│           ├── industry.py          # Base class definitions (accepts, supply multipliers)
+│           └── global_constants.py  # Supply requirement thresholds
 ├── scripts/
-│   ├── generate_production_data.py   # Source parser → JSON
-│   ├── plot_cargo_revenue.py         # Revenue figure builder
-│   ├── plot_industry_cargo.py        # Sankey, primary, heatmap, combo builders
-│   ├── plot_dashboard.py             # Assembles all figures into tabbed HTML
-├── data/                              # Generated (gitignored)
+│   ├── generate_production_data.py  # Source parser → JSON
+│   ├── plot_cargo_revenue.py        # Revenue figure builder
+│   ├── plot_industry_cargo.py       # Sankey, primary, heatmap, combo builders
+│   └── plot_dashboard.py            # Assembles all figures into tabbed HTML
+├── data/                            # Generated (gitignored)
 │   └── nais_production_data.json
-└── dashboard/                         # Generated (gitignored)
+└── dashboard/                       # Generated (gitignored)
     └── nais_dashboard.html
 ```
 
@@ -38,7 +42,7 @@ Interactive analysis and visualization of the [NAIS (North American Industry Set
 
 ```mermaid
 flowchart TD
-    SRC["NAIS source (submodule)<br/><code>nais/NAIS - …/src/cargos/*.py</code><br/><code>nais/NAIS - …/src/industries/*.py</code><br/><code>nais/NAIS - …/src/lang/english.lng</code>"]
+    SRC["NAIS source (submodule)<br><code>src/cargos/\*.py</code><br><code>src/industries/\*.py</code><br><code>src/lang/english.lng</code><br><code>src/industry.py</code><br><code>src/global_constants.py</code><br><code>src/templates/\*.pynml</code><br><code>Makefile</code>"]
     GEN["<code>generate_production_data.py</code>"]
     JSON[("<code>nais_production_data.json</code>")]
     REV["<code>plot_cargo_revenue.py</code>"]
@@ -64,15 +68,16 @@ All data flows from the NAIS source through the generation script into JSON. The
 Parses the NAIS source directory to extract:
 
 - **Cargo definitions** — name, price factor, penalty lower bound, single penalty length, cargo classes, freight flag, weight, town growth effect, capacity multiplier
-- **Primary industries** — type, accepted cargos, production multipliers, production ranges (min/max/weighted average), supply boost thresholds
+- **Primary industries** — type, accepted cargos (including supply-boost cargos parsed from base classes in `industry.py`), production multipliers, production ranges (min/max/weighted average at base, L1, and L2 supply levels), supply boost thresholds and percentages
 - **Secondary industries** — input/output ratios, combinatory boost flag, full production tables for every combination of delivered inputs
 - **Tertiary industries** — accepted cargos, any production outputs
+- **Production-mechanic constants** — random production factors and weights (from `randomise_primary_production_on_build.pynml`), supply requirement thresholds (from `global_constants.py`), supply level percentages (from `header.pynml`), per-class accepted cargos and supply multipliers (from `industry.py`)
 
-Validates the generated output against any existing JSON and reports differences before overwriting.
+No industry or cargo data is hardcoded — every constant is parsed from the NAIS source files. Validates the generated output against any existing JSON and reports differences before overwriting.
 
 ```bash
-python scripts/generate_production_data.py              # generate + validate
-python scripts/generate_production_data.py --skip-validate   # generate only
+python scripts/generate_production_data.py                  # generate + validate
+python scripts/generate_production_data.py --skip-validate  # generate only
 ```
 
 ### `plot_cargo_revenue.py`
@@ -109,12 +114,12 @@ Secondary output normalization: `total_output_across_inputs / n_inputs` — make
 
 Assembles all figures into a single tabbed HTML page with:
 
-- Consistent theme across all plots
-- Sticky tab bar with keyboard-accessible navigation
+- Consistent theme and unified font stack across all plots
+- Viewport-adaptive plot sizing (fills available height)
+- Sticky tab bar with tab switching
 - Sankey filter dropdown (cargo and industry checkboxes with search)
 - Revenue chart speed slider that persists across trip/day toggle
 - NAIS version display from JSON metadata
-- Git commit info for NAIS submodule and dashboard repo in footer
 
 ```bash
 python scripts/plot_dashboard.py    # writes dashboard/nais_dashboard.html

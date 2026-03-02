@@ -495,6 +495,7 @@ def build_sankey_figure():
 def build_primary_figure():
     """Build box-plot chart for primary industry production ranges."""
     rows = []
+    l2_pcts: set[int] = set()  # collect distinct L2 production percents for legend label
     for ind_name, ind_data in sorted(PRIMARY.items()):
         boost_cargos = [a for a in ind_data.get("accepts", [])
                         if a.get("purpose") == "boost production"]
@@ -504,9 +505,22 @@ def build_primary_figure():
         if sr:
             levels_str = (f"L1 ≥{sr['level1_threshold_3months']} → {sr['level1_production_percent']}%, "
                           f"L2 ≥{sr['level2_threshold_3months']} → {sr['level2_production_percent']}%")
+            l2_pcts.add(sr["level2_production_percent"])
         else:
             levels_str = "None"
         for cargo_label, cargo_info in ind_data["produces"].items():
+            pr = cargo_info["production_range"]
+            # Industries without supply requirements can't boost; L2 = base
+            if sr:
+                min_l2 = pr["with_level2_supplies_min"]
+                avg_l2 = pr["weighted_average_level2"]
+                max_l2 = pr["with_level2_supplies_max"]
+                has_boost = True
+            else:
+                min_l2 = pr["min_base"]
+                avg_l2 = pr["weighted_average_base"]
+                max_l2 = pr["max_base"]
+                has_boost = False
             rows.append({
                 "industry": pretty(ind_name),
                 "cargo": cargo_info["cargo_name"],
@@ -514,13 +528,23 @@ def build_primary_figure():
                 "type": ind_data["type"],
                 "boost_cargos": boost_str,
                 "boost_levels": levels_str,
-                "min_base": cargo_info["production_range"]["min_base"],
-                "avg_base": cargo_info["production_range"]["weighted_average_base"],
-                "max_base": cargo_info["production_range"]["max_base"],
-                "min_l2": cargo_info["production_range"]["with_level2_supplies_min"],
-                "avg_l2": round(cargo_info["production_range"]["weighted_average_base"] * 3),
-                "max_l2": cargo_info["production_range"]["with_level2_supplies_max"],
+                "has_boost": has_boost,
+                "min_base": pr["min_base"],
+                "avg_base": pr["weighted_average_base"],
+                "max_base": pr["max_base"],
+                "min_l2": min_l2,
+                "avg_l2": avg_l2,
+                "max_l2": max_l2,
             })
+
+    # Build a human-readable L2 multiplier label from the JSON data
+    if len(l2_pcts) == 1:
+        l2_mult = f"×{next(iter(l2_pcts)) // 100}"
+    elif l2_pcts:
+        l2_mult = "/".join(f"×{p // 100}" for p in sorted(l2_pcts))
+    else:
+        l2_mult = ""
+    l2_label = f"L2 supply ({l2_mult})" if l2_mult else "L2 supply"
 
     # Sort by cargo label first (group by cargo), then by avg_base descending within each cargo
     rows.sort(key=lambda r: (r["cargo_label"], -r["avg_base"]))
@@ -566,7 +590,7 @@ def build_primary_figure():
 
     # L2 supply production box plot (orange) — pre-computed statistics
     fig.add_trace(go.Box(
-        name="L2 supply (3×)",
+        name=l2_label,
         x=x_labels,
         lowerfence=[r["min_l2"] for r in rows],
         q1=[r["min_l2"] for r in rows],
@@ -581,13 +605,14 @@ def build_primary_figure():
     # Invisible scatter points at min, avg, max for L2 hover across the full box
     for y_key in ("min_l2", "avg_l2", "max_l2"):
         fig.add_trace(go.Scatter(
-            name="L2 supply (3×)",
+            name=l2_label,
             x=x_labels,
             y=[r[y_key] for r in rows],
             mode="markers",
             marker=dict(size=12, opacity=0, color="rgba(255,140,0,0.85)"),
-            customdata=[[r["boost_cargos"], r["boost_levels"], r["min_l2"], r["avg_l2"], r["max_l2"]] for r in rows],
-            hovertemplate=("<b>L2 supply (3×)</b><br>"
+            customdata=[[r["boost_cargos"], r["boost_levels"], r["min_l2"], r["avg_l2"], r["max_l2"],
+                         l2_label if r["has_boost"] else "Boost unavailable"] for r in rows],
+            hovertemplate=("<b>%{customdata[5]}</b><br>"
                            "Boosted by: %{customdata[0]}<br>"
                            "Boost levels: %{customdata[1]}<br>"
                            "Min: %{customdata[2]}<br>"
@@ -680,7 +705,7 @@ def build_primary_figure():
         hoverlabel=dict(font=dict(size=12)),
         title=dict(
             text="NAIS Primary Industry Production Ranges<br>"
-                 "<sub>Grouped by cargo · Base production (blue) vs Level 2 supply boost ×3 (orange) · ★ = Best average (base/L2)</sub>",
+                 f"<sub>Grouped by cargo · Base production (blue) vs {l2_label} (orange) · ★ = Best average (base/L2)</sub>",
             font=dict(size=16),
         ),
         xaxis=dict(title="Industry (cargo)", tickangle=-45, tickfont=dict(size=10)),

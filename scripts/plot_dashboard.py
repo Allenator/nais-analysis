@@ -69,15 +69,23 @@ def get_nais_version() -> str:
         return "unknown"
 
 
-def _git_info(repo_path: str) -> str:
-    """Return a short commit description + modified flag for a git repo.
+def _git_info(repo_path: str) -> dict[str, str]:
+    """Return git commit metadata for a repo.
 
-    Format: ``abc1234 (modified)`` or ``abc1234`` (clean).
-    Returns ``"unknown"`` on any failure.
+    Returns a dict with keys ``short``, ``full``, and ``display``
+    (includes `` (modified)`` suffix when the working tree is dirty).
+    On failure every value is ``"unknown"``.
     """
+    unknown = {"short": "unknown", "full": "unknown", "display": "unknown"}
     try:
         short_hash = subprocess.check_output(
             ["git", "rev-parse", "--short", "HEAD"],
+            cwd=repo_path,
+            stderr=subprocess.DEVNULL,
+            text=True,
+        ).strip()
+        full_hash = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"],
             cwd=repo_path,
             stderr=subprocess.DEVNULL,
             text=True,
@@ -88,12 +96,18 @@ def _git_info(repo_path: str) -> str:
             cwd=repo_path,
             stderr=subprocess.DEVNULL,
         ) != 0
-        return f"{short_hash} (modified)" if dirty else short_hash
+        display = f"{short_hash} (modified)" if dirty else short_hash
+        return {"short": short_hash, "full": full_hash, "display": display}
     except (subprocess.CalledProcessError, FileNotFoundError, OSError):
-        return "unknown"
+        return unknown
 
 
-def get_commit_info() -> dict[str, str]:
+# GitHub base URLs for commit links
+_GITHUB_DASHBOARD = "https://github.com/Allenator/nais-analysis"
+_GITHUB_NAIS = "https://github.com/Allenator/nais"
+
+
+def get_commit_info() -> dict[str, dict[str, str]]:
     """Gather git commit info for the dashboard repo and the NAIS submodule."""
     dashboard_info = _git_info(PROJECT_ROOT)
     nais_submodule = os.path.join(PROJECT_ROOT, "nais")
@@ -105,7 +119,7 @@ def build_dashboard_html(
     figures: dict[str, tuple[str, go.Figure]],
     nais_version: str = "unknown",
     sankey_meta: dict | None = None,
-    commit_info: dict[str, str] | None = None,
+    commit_info: dict[str, dict[str, str]] | None = None,
 ) -> str:
     """
     Build a single HTML page with tab buttons that switch between
@@ -120,11 +134,23 @@ def build_dashboard_html(
     sankey_meta : dict, optional
         Metadata from build_sankey_figure() for cargo filtering controls.
     commit_info : dict, optional
-        Git commit info with keys ``"dashboard"`` and ``"nais"``.
+        Git commit info with keys ``"dashboard"`` and ``"nais"``,
+        each mapping to a dict with ``short``, ``full``, and ``display``.
     """
-    # Extract commit info for footer
-    commit_nais = (commit_info or {}).get("nais", "unknown")
-    commit_dashboard = (commit_info or {}).get("dashboard", "unknown")
+    # Extract commit info for footer — build clickable GitHub links
+    _ci = commit_info or {}
+    _unknown = {"short": "unknown", "full": "unknown", "display": "unknown"}
+    nais_ci = _ci.get("nais", _unknown)
+    dash_ci = _ci.get("dashboard", _unknown)
+
+    def _commit_link(base_url: str, ci: dict[str, str]) -> str:
+        if ci["full"] == "unknown":
+            return f'<code>{ci["display"]}</code>'
+        dirty_suffix = " (modified)" if ci["display"] != ci["short"] else ""
+        return f'<a href="{base_url}/commit/{ci["full"]}"><code>{ci["short"]}</code></a>{dirty_suffix}'
+
+    commit_nais_html = _commit_link(_GITHUB_NAIS, nais_ci)
+    commit_dashboard_html = _commit_link(_GITHUB_DASHBOARD, dash_ci)
 
     # Generate individual div HTML for each figure
     divs = {}
@@ -465,7 +491,7 @@ def build_dashboard_html(
         By <a href="https://github.com/Allenator">Allenator</a>
         <br>
         Latest: <a href="https://allenator.github.io/nais-analysis/">allenator.github.io/nais-analysis</a> ·
-        NAIS commit: <code>{commit_nais}</code> · Dashboard commit: <code>{commit_dashboard}</code> ·
+        NAIS commit: {commit_nais_html} · Dashboard commit: {commit_dashboard_html} ·
         <a href="https://www.gnu.org/licenses/old-licenses/gpl-2.0.html">GPL v2</a>
     </div>
     <script>
@@ -746,8 +772,8 @@ if __name__ == "__main__":
     nais_version = get_nais_version()
     commit_info = get_commit_info()
     print(f"  NAIS version: {nais_version}")
-    print(f"  NAIS commit:      {commit_info['nais']}")
-    print(f"  Dashboard commit: {commit_info['dashboard']}")
+    print(f"  NAIS commit:      {commit_info['nais']['display']}")
+    print(f"  Dashboard commit: {commit_info['dashboard']['display']}")
     html_content = build_dashboard_html(
         figures, nais_version=nais_version, sankey_meta=sankey_meta, commit_info=commit_info,
     )

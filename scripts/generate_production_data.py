@@ -348,8 +348,10 @@ def prod_range(multiplier: int) -> dict:
         "weighted_average_base": round(multiplier * WEIGHTED_AVG_FACTOR),
         "with_level1_supplies_min": round(multiplier * min_f * LEVEL1_PERCENT / 100),
         "with_level1_supplies_max": round(multiplier * max_f * LEVEL1_PERCENT / 100),
+        "weighted_average_level1": round(multiplier * WEIGHTED_AVG_FACTOR * LEVEL1_PERCENT / 100),
         "with_level2_supplies_min": round(multiplier * min_f * LEVEL2_PERCENT / 100),
         "with_level2_supplies_max": round(multiplier * max_f * LEVEL2_PERCENT / 100),
+        "weighted_average_level2": round(multiplier * WEIGHTED_AVG_FACTOR * LEVEL2_PERCENT / 100),
     }
 
 
