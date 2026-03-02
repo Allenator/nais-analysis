@@ -7,7 +7,7 @@ Tabs:
   1. 💰 Cargo Revenue — revenue vs distance with speed slider
   2. 🔀 Cargo Flow (Sankey) — full cargo flow network
   3. 📊 Primary Production — box plots of production ranges
-  4. 🔥 Secondary Heatmap — conversion output heatmap
+  4. 🔥 Secondary Heatmap — efficiency heatmap
   5. ⚡ Combo Boost — solo vs combined delivery comparison
 
 Reads:  data/nais_production_data.json (via plot_industry_cargo)
@@ -445,7 +445,7 @@ def build_dashboard_html(
 <body>
     <div class="header">
         <h1>🚂 NAIS — North American Industry Set <span style="font-size:14px;font-weight:400;opacity:0.8">v{nais_version}</span></h1>
-        <p>Interactive dashboard · Cargo economics, production ranges, industry flows &amp; conversion analysis</p>
+        <p>Interactive dashboard · Cargo economics, production ranges, industry flows &amp; efficiency analysis</p>
     </div>
     <div class="tab-bar">
         {tab_buttons_html}
@@ -669,7 +669,7 @@ if __name__ == "__main__":
     print("  [3/5] Primary production ranges...")
     fig_primary = apply_theme(build_primary_figure())
 
-    print("  [4/5] Secondary conversion heatmap...")
+    print("  [4/5] Secondary efficiency heatmap...")
     fig_heatmap = apply_theme(build_heatmap_figure())
 
     print("  [5/5] Combo boost comparison...")
@@ -680,7 +680,7 @@ if __name__ == "__main__":
         "revenue":  ("💰 Cargo Revenue",                fig_revenue),
         "sankey":   ("🔀 Cargo Flow (Sankey)",           fig_sankey),
         "primary":  ("📊 Primary Production Ranges",     fig_primary),
-        "heatmap":  ("🔥 Secondary Conversion Heatmap",  fig_heatmap),
+        "heatmap":  ("🔥 Secondary Efficiency Heatmap",  fig_heatmap),
         "combo":    ("⚡ Combo Boost Comparison",         fig_combo),
     }
 

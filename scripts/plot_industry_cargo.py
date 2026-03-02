@@ -5,7 +5,7 @@ Plotly figure builders for NAIS (North American Industry Set) industry & cargo v
 Four figure builders:
   1. build_sankey_figure()   — full cargo flow network (returns (fig, sankey_meta) tuple)
   2. build_primary_figure()  — box plots of production ranges with supply boost levels
-  3. build_heatmap_figure()  — secondary industry conversion heatmap
+  3. build_heatmap_figure()  — secondary industry efficiency heatmap
   4. build_combo_figure()    — solo vs combined delivery comparison
 
 Invoked by plot_dashboard.py to assemble the unified dashboard.
@@ -463,7 +463,7 @@ def build_sankey_figure():
     fig.update_layout(
         title=dict(
             text="NAIS Cargo Flow Network<br>"
-                 "<sub>Primary (left) → Cargo → Secondary/Tertiary (right) · "
+                 "<sub>Primary (left) → cargo → secondary/tertiary (right) · "
                  "★ = Best producer per tier · Link thickness ∝ output · Drag nodes to rearrange</sub>",
             font=dict(size=16),
         ),
@@ -667,7 +667,7 @@ def build_primary_figure():
 
 
 # =====================================================================
-# VIEW 3: SECONDARY CONVERSION HEATMAP
+# VIEW 3: SECONDARY EFFICIENCY HEATMAP
 # =====================================================================
 
 def build_heatmap_figure():
@@ -708,7 +708,7 @@ def build_heatmap_figure():
                     if val > 0:
                         details.append(f"  8 {inp_label} → {val} {out_label}")
 
-            normalized = round(raw_total / n_inputs, 1) if raw_total > 0 else 0
+            normalized = round(raw_total / n_inputs, 1) if raw_total > 0 else None
             row.append(normalized)
             if details:
                 hover_row.append(
@@ -735,8 +735,9 @@ def build_heatmap_figure():
         text=hover_transposed,
         hovertemplate="%{text}<extra></extra>",
         colorscale="YlOrRd",
-        colorbar=dict(title="Output per<br>8 units input<br>(all present,<br>norm.)"),
-        zmin=0,
+        colorbar=dict(title="Output per<br>8 units input<br>(all present,<br>normalized)<br>&nbsp;"),
+        xgap=2,
+        ygap=2,
     ))
 
     # Highlight the best producer for each cargo (each row in transposed matrix)
@@ -744,14 +745,13 @@ def build_heatmap_figure():
     y_labels = [f"{CARGO_DEFS[l]['name']} ({l})" for l in all_output_labels]
     best_annotations = []
     for cargo_idx, cargo_row in enumerate(z_transposed):
-        if not any(v > 0 for v in cargo_row):
+        positive = [v for v in cargo_row if v is not None and v > 0]
+        if not positive:
             continue
-        max_val = max(cargo_row)
-        if max_val <= 0:
-            continue
+        max_val = max(positive)
         # Find ALL industries tied for best producer of this cargo
         for ind_idx, val in enumerate(cargo_row):
-            if val == max_val:
+            if val is not None and val == max_val:
                 best_annotations.append(dict(
                     x=x_labels[ind_idx],
                     y=y_labels[cargo_idx],
@@ -760,18 +760,43 @@ def build_heatmap_figure():
                     font=dict(size=10, color="white", family="Arial Black"),
                 ))
 
+    # Build grid-line shapes at cell boundaries (half-tick offsets)
+    n_x = len(industries)
+    n_y = len(all_output_labels)
+    grid_color = "rgba(200,200,200,0.5)"
+    grid_shapes = []
+    # Vertical lines between columns
+    for i in range(n_x + 1):
+        grid_shapes.append(dict(
+            type="line", xref="x", yref="paper",
+            x0=i - 0.5, x1=i - 0.5, y0=0, y1=1,
+            line=dict(color=grid_color, width=1),
+            layer="above",
+        ))
+    # Horizontal lines between rows
+    for j in range(n_y + 1):
+        grid_shapes.append(dict(
+            type="line", xref="paper", yref="y",
+            x0=0, x1=1, y0=j - 0.5, y1=j - 0.5,
+            line=dict(color=grid_color, width=1),
+            layer="above",
+        ))
+
     fig.update_layout(
         title=dict(
-            text="NAIS Secondary Industry Output Heatmap<br>"
+            text="NAIS Secondary Industry Efficiency Heatmap<br>"
                  "<sub>Output per 8 units of input (all inputs present, normalized by # inputs) · ★ = Best producer</sub>",
             font=dict(size=16),
         ),
-        xaxis=dict(title="Industry", tickfont=dict(size=9), tickangle=-45, side="bottom"),
-        yaxis=dict(title="Output cargo", tickfont=dict(size=9)),
+        xaxis=dict(title="Industry", tickfont=dict(size=9), tickangle=-45, side="bottom",
+                   showgrid=False),
+        yaxis=dict(title="Output cargo", tickfont=dict(size=9),
+                   showgrid=False),
         template="plotly_white",
         height=900,
         margin=dict(t=80, b=200, l=180, r=80),
         annotations=best_annotations,
+        shapes=grid_shapes,
         paper_bgcolor="white",
         plot_bgcolor="white",
     )

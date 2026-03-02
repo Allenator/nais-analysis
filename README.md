@@ -11,7 +11,7 @@ Interactive analysis and visualization of the [NAIS (North American Industry Set
 | 💰 **Cargo Revenue** | Revenue vs distance curves for all 30 cargo types, with a speed slider (10–300 km/h) and per-trip / per-day toggle. Implements the full OpenTTD four-regime payment formula. |
 | 🔀 **Cargo Flow (Sankey)** | Full cargo flow network: Primary → Cargo → Secondary/Tertiary. Nodes show detailed hover info (production rules, combo boost, payment properties). Filterable by cargo and industry. |
 | 📊 **Primary Production** | Box plots of base and Level 2 supply-boosted production ranges for every primary industry, grouped by cargo type. |
-| 🔥 **Secondary Heatmap** | Conversion output heatmap — output per 8 units of input (all inputs present, normalized by number of inputs) for every secondary industry. |
+| 🔥 **Secondary Heatmap** | Efficiency heatmap — output per 8 units of input (all inputs present, normalized by number of inputs) for every secondary industry. |
 | ⚡ **Combo Boost** | Side-by-side comparison of solo vs combined delivery output, highlighting the combinatory boost percentage for each secondary industry. |
 
 ## Project Structure
@@ -100,7 +100,7 @@ Exports four figure builders:
 |----------|--------|
 | `build_sankey_figure()` | Cargo flow Sankey with rich hover, best-producer stars, and filtering metadata |
 | `build_primary_figure()` | Primary production range box plots with supply boost levels |
-| `build_heatmap_figure()` | Secondary conversion output heatmap (normalized by input count) |
+| `build_heatmap_figure()` | Secondary efficiency heatmap (normalized by input count) |
 | `build_combo_figure()` | Solo vs combined delivery grouped bar chart with boost annotations |
 
 Secondary output normalization: `total_output_across_inputs / n_inputs` — makes values comparable across industries with different numbers of inputs.
