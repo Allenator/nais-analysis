@@ -152,4 +152,4 @@ The dashboard is automatically built and deployed to GitHub Pages on every push 
 
 ## License
 
-Analysis scripts are provided as-is. NAIS itself is a separate project — see its own license terms.
+Licensed under [GPL v2](LICENSE), consistent with the [NAIS](https://www.tt-forums.net/viewtopic.php?t=84039) / [FIRS](https://github.com/andythenorth/firs) upstream license.
