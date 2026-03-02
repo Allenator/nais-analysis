@@ -480,7 +480,7 @@ def build_primary_industry(
 
     if industry_type == "IndustryPrimaryNoSupplies":
         entry["supply_requirements"] = None
-        entry["note"] = "No supply boost available. Production is fixed at initial random level."
+        entry["note"] = "Supply unavailable. Production is fixed at initial random level."
 
     return entry
 

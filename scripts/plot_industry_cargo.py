@@ -4,7 +4,7 @@ Plotly figure builders for NAIS (North American Industry Set) industry & cargo v
 
 Four figure builders:
   1. build_sankey_figure()   — full cargo flow network (returns (fig, sankey_meta) tuple)
-  2. build_primary_figure()  — box plots of production ranges with supply boost levels
+  2. build_primary_figure()  — box plots of production ranges with supply levels
   3. build_heatmap_figure()  — secondary industry efficiency heatmap
   4. build_combo_figure()    — solo vs combined delivery comparison
 
@@ -267,18 +267,18 @@ def build_sankey_figure():
         idx = node_index[node_key]
         ind_type_label = ind_data["type"].replace("IndustryPrimary", "Primary · ")
         lines = [f"<b>{pretty(ind_name)}</b>", f"Type: {ind_type_label}"]
-        # Accepted cargos for supply boost
-        boost_cargos = [a for a in ind_data.get("accepts", []) if a.get("purpose") == "boost production"]
-        if boost_cargos:
-            cargo_list = ", ".join(f"{a['name']} ({a['label']})" for a in boost_cargos)
-            lines.append(f"Boosted by: {cargo_list}")
-        # Boost level thresholds
+        # Accepted cargos for supply
+        supply_cargos = [a for a in ind_data.get("accepts", []) if a.get("purpose") == "boost production"]
+        if supply_cargos:
+            cargo_list = ", ".join(f"{a['name']} ({a['label']})" for a in supply_cargos)
+            lines.append(f"Supplied by: {cargo_list}")
+        # Supply level thresholds
         sr = ind_data.get("supply_requirements")
         if sr:
-            lines.append(f"Boost levels: L1 ≥{sr['level1_threshold_3months']} → {sr['level1_production_percent']}%, "
+            lines.append(f"Supply levels: L1 ≥{sr['level1_threshold_3months']} → {sr['level1_production_percent']}%, "
                          f"L2 ≥{sr['level2_threshold_3months']} → {sr['level2_production_percent']}%")
         else:
-            lines.append("Boost levels: none (no supplies accepted)")
+            lines.append("Supply unavailable")
         # Production per cargo
         lines.append("─── Production ───")
         for cargo_label, cargo_info in ind_data["produces"].items():
@@ -311,7 +311,7 @@ def build_sankey_figure():
         lines = [f"<b>{pretty(ind_name)}</b>", f"Type: Secondary"]
         lines.append(f"Combo boost: {'Yes – delivering multiple cargos boosts output' if has_combo else 'No – each cargo processed independently'}")
         # Input ratios
-        lines.append("─── Inputs ───")
+        lines.append("─── Input ───")
         for inp in ind_data["input_cargos"]:
             lines.append(f"  {inp['name']} ({inp['label']}): ratio {inp['base_ratio']}/8")
         # Output production rules
@@ -497,10 +497,10 @@ def build_primary_figure():
     rows = []
     l2_pcts: set[int] = set()  # collect distinct L2 production percents for legend label
     for ind_name, ind_data in sorted(PRIMARY.items()):
-        boost_cargos = [a for a in ind_data.get("accepts", [])
-                        if a.get("purpose") == "boost production"]
-        boost_str = (", ".join(f"{a['name']} ({a['label']})" for a in boost_cargos)
-                     if boost_cargos else "None")
+        supply_cargos = [a for a in ind_data.get("accepts", [])
+                         if a.get("purpose") == "boost production"]
+        supply_str = (", ".join(f"{a['name']} ({a['label']})" for a in supply_cargos)
+                      if supply_cargos else "None")
         sr = ind_data.get("supply_requirements")
         if sr:
             levels_str = (f"L1 ≥{sr['level1_threshold_3months']} → {sr['level1_production_percent']}%, "
@@ -510,25 +510,25 @@ def build_primary_figure():
             levels_str = "None"
         for cargo_label, cargo_info in ind_data["produces"].items():
             pr = cargo_info["production_range"]
-            # Industries without supply requirements can't boost; L2 = base
+            # Industries without supply requirements can't be supplied; L2 = base
             if sr:
                 min_l2 = pr["with_level2_supplies_min"]
                 avg_l2 = pr["weighted_average_level2"]
                 max_l2 = pr["with_level2_supplies_max"]
-                has_boost = True
+                has_supply = True
             else:
                 min_l2 = pr["min_base"]
                 avg_l2 = pr["weighted_average_base"]
                 max_l2 = pr["max_base"]
-                has_boost = False
+                has_supply = False
             rows.append({
                 "industry": pretty(ind_name),
                 "cargo": cargo_info["cargo_name"],
                 "cargo_label": cargo_label,
                 "type": ind_data["type"],
-                "boost_cargos": boost_str,
-                "boost_levels": levels_str,
-                "has_boost": has_boost,
+                "supply_cargos": supply_str,
+                "supply_levels": levels_str,
+                "has_supply": has_supply,
                 "min_base": pr["min_base"],
                 "avg_base": pr["weighted_average_base"],
                 "max_base": pr["max_base"],
@@ -559,6 +559,7 @@ def build_primary_figure():
     fig.add_trace(go.Box(
         name="Base",
         x=x_labels,
+        offsetgroup="base",
         lowerfence=[r["min_base"] for r in rows],
         q1=[r["min_base"] for r in rows],
         median=[r["avg_base"] for r in rows],
@@ -569,18 +570,20 @@ def build_primary_figure():
         line=dict(color="rgba(25,25,112,0.8)"),
         hoverinfo="skip",
     ))
-    # Invisible scatter points at min, avg, max for Base hover across the full box
+    # Invisible scatter points at min, avg, max for Base hover across the full box.
+    # offsetgroup aligns these with the blue Box trace in grouped box mode.
     for y_key in ("min_base", "avg_base", "max_base"):
         fig.add_trace(go.Scatter(
             name="Base",
             x=x_labels,
             y=[r[y_key] for r in rows],
+            offsetgroup="base",
             mode="markers",
             marker=dict(size=12, opacity=0, color="rgba(65,105,225,0.85)"),
-            customdata=[[r["boost_cargos"], r["boost_levels"], r["min_base"], r["avg_base"], r["max_base"]] for r in rows],
+            customdata=[[r["supply_cargos"], r["supply_levels"], r["min_base"], r["avg_base"], r["max_base"]] for r in rows],
             hovertemplate=("<b>Base</b><br>"
-                           "Boosted by: %{customdata[0]}<br>"
-                           "Boost levels: %{customdata[1]}<br>"
+                           "Supplied by: %{customdata[0]}<br>"
+                           "Supply levels: %{customdata[1]}<br>"
                            "Min: %{customdata[2]}<br>"
                            "Weighted avg: %{customdata[3]}<br>"
                            "Max: %{customdata[4]}<extra>%{x}</extra>"),
@@ -592,6 +595,7 @@ def build_primary_figure():
     fig.add_trace(go.Box(
         name=l2_label,
         x=x_labels,
+        offsetgroup="l2",
         lowerfence=[r["min_l2"] for r in rows],
         q1=[r["min_l2"] for r in rows],
         median=[r["avg_l2"] for r in rows],
@@ -602,19 +606,21 @@ def build_primary_figure():
         line=dict(color="rgba(255,69,0,0.8)"),
         hoverinfo="skip",
     ))
-    # Invisible scatter points at min, avg, max for L2 hover across the full box
+    # Invisible scatter points at min, avg, max for L2 hover across the full box.
+    # offsetgroup aligns these with the orange Box trace in grouped box mode.
     for y_key in ("min_l2", "avg_l2", "max_l2"):
         fig.add_trace(go.Scatter(
             name=l2_label,
             x=x_labels,
             y=[r[y_key] for r in rows],
+            offsetgroup="l2",
             mode="markers",
             marker=dict(size=12, opacity=0, color="rgba(255,140,0,0.85)"),
-            customdata=[[r["boost_cargos"], r["boost_levels"], r["min_l2"], r["avg_l2"], r["max_l2"],
-                         l2_label if r["has_boost"] else "Boost unavailable"] for r in rows],
+            customdata=[[r["supply_cargos"], r["supply_levels"], r["min_l2"], r["avg_l2"], r["max_l2"],
+                         l2_label if r["has_supply"] else "Supply unavailable"] for r in rows],
             hovertemplate=("<b>%{customdata[5]}</b><br>"
-                           "Boosted by: %{customdata[0]}<br>"
-                           "Boost levels: %{customdata[1]}<br>"
+                           "Supplied by: %{customdata[0]}<br>"
+                           "Supply levels: %{customdata[1]}<br>"
                            "Min: %{customdata[2]}<br>"
                            "Weighted avg: %{customdata[3]}<br>"
                            "Max: %{customdata[4]}<extra>%{x}</extra>"),
@@ -712,6 +718,7 @@ def build_primary_figure():
         yaxis=dict(title="Production per cycle", gridcolor="rgba(200,200,200,0.5)",
                    range=[0, y_range_top]),
         boxmode="group",
+        scattermode="group",
         template="plotly_white",
         margin=dict(t=80, b=0, l=60, r=20),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(size=10), bgcolor="rgba(0,0,0,0)"),

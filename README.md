@@ -104,7 +104,7 @@ Exports four figure builders:
 | Function | Figure |
 |----------|--------|
 | `build_sankey_figure()` | Cargo flow Sankey with rich hover, best-producer stars, and filtering metadata |
-| `build_primary_figure()` | Primary production range box plots with supply boost levels |
+| `build_primary_figure()` | Primary production range box plots with supply levels |
 | `build_heatmap_figure()` | Secondary efficiency heatmap (normalized by input count) |
 | `build_combo_figure()` | Solo vs combined delivery grouped bar chart with boost annotations |
 
