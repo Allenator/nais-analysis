@@ -752,7 +752,7 @@ def build_heatmap_figure():
                 best_annotations.append(dict(
                     x=x_labels[ind_idx],
                     y=y_labels[cargo_idx],
-                    text=f"★ {max_val}",
+                    text=f"★ {round(max_val)}",
                     showarrow=False,
                     font=dict(size=10, color="white", family="Arial Black"),
                 ))
