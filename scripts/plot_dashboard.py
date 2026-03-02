@@ -543,8 +543,7 @@ def build_dashboard_html(
 
         // ── Initial viewport-adaptive resize on page load ─────────
         document.addEventListener('DOMContentLoaded', function() {{
-            // Short delay to let Plotly finish initial render
-            setTimeout(resizeVisiblePlot, 100);
+            requestAnimationFrame(resizeVisiblePlot);
         }});
 
         // ── Revenue plot: sync speed slider with trip/day toggle ──
@@ -587,8 +586,8 @@ def build_dashboard_html(
         document.addEventListener('DOMContentLoaded', function() {{
             var sankeyPlot = document.getElementById('plot-sankey');
             if (!sankeyPlot || !sankeyPlot.data || !sankeyPlot.data[0]) return;
-            // Wait for Plotly to finish rendering, then nudge node 0
-            setTimeout(function() {{
+            // Nudge node 0 after Plotly finishes rendering
+            requestAnimationFrame(function() {{
                 var nodeData = sankeyPlot.data[0].node;
                 if (!nodeData) return;
                 var n = nodeData.label ? nodeData.label.length : 0;
@@ -606,7 +605,7 @@ def build_dashboard_html(
                     'node.x': [xs],
                     'node.y': [ys]
                 }}, [0]);
-            }}, 200);
+            }});
         }});
 
         // ── Sankey cargo filtering ─────────────────────────────────
