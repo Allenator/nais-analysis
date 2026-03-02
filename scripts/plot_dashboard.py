@@ -771,7 +771,7 @@ if __name__ == "__main__":
 
     nais_version = get_nais_version()
     commit_info = get_commit_info()
-    print(f"  NAIS version: {nais_version}")
+    print(f"  NAIS version:     {nais_version}")
     print(f"  NAIS commit:      {commit_info['nais']['display']}")
     print(f"  Dashboard commit: {commit_info['dashboard']['display']}")
     html_content = build_dashboard_html(
