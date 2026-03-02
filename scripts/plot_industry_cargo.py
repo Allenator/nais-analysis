@@ -585,6 +585,7 @@ def build_primary_figure():
         for i, r in group:
             if r["avg_base"] == max_avg:
                 best_annotations.append(dict(
+                    _x_idx=i,  # temporary; removed below
                     x=x_labels[i],
                     y=r["max_l2"],  # place above the tallest box
                     text=f"★ {r['avg_base']}/{r['avg_l2']}",
@@ -592,6 +593,16 @@ def build_primary_figure():
                     yshift=10,
                     font=dict(size=10, color="darkred"),
                 ))
+
+    # Stagger vertically when adjacent stars sit at the same height
+    best_annotations.sort(key=lambda a: a["_x_idx"])
+    for idx in range(1, len(best_annotations)):
+        prev, cur = best_annotations[idx - 1], best_annotations[idx]
+        if (cur["_x_idx"] == prev["_x_idx"] + 1
+                and cur["y"] == prev["y"]):
+            cur["yshift"] = 22 if prev["yshift"] <= 12 else 10
+    for a in best_annotations:
+        del a["_x_idx"]
 
     # Build alternating background shading and cargo group labels
     # For categorical x-axis, positions are 0-indexed integers
@@ -613,9 +624,9 @@ def build_primary_figure():
         cargo_boundaries.append((group_start, len(rows) - 1, prev_cargo, rows[group_start]["cargo"]))
 
     data_max = max(r["max_l2"] for r in rows)
-    max_y = data_max * 1.14  # label placement baseline
-    label_gap = data_max * 0.05  # small gap between high and low labels
-    y_range_top = data_max * 1.22  # extra headroom for labels
+    max_y = data_max * 1.22  # label placement baseline (top tier)
+    label_gap = data_max * 0.08  # vertical gap between each tier
+    y_range_top = data_max * 1.32  # extra headroom for 3-tier labels
 
     for start, end, cargo_label, cargo_name in cargo_boundaries:
         shapes.append(dict(
@@ -627,10 +638,9 @@ def build_primary_figure():
             line=dict(width=0),
             layer="below",
         ))
-        # Add cargo group label at the top, alternating vertical position
-        # Even labels at max_y, odd labels just below (max_y - label_gap)
+        # Add cargo group label at the top, cycling through 3 vertical tiers
         mid_x = (start + end) / 2
-        label_y = max_y if color_idx % 2 == 0 else max_y - label_gap
+        label_y = max_y - (color_idx % 3) * label_gap
         cargo_label_annotations.append(dict(
             x=mid_x,
             y=label_y,
