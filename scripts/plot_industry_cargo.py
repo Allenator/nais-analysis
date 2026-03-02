@@ -656,7 +656,7 @@ def build_primary_figure():
         template="plotly_white",
         height=1000,
         margin=dict(t=80, b=200, l=60, r=20),
-        legend=dict(orientation="h", yanchor="top", y=-0.15, xanchor="center", x=0.5, font=dict(size=10)),
+        legend=dict(orientation="h", yanchor="top", y=-0.15, xanchor="center", x=0.5, font=dict(size=10), bgcolor="rgba(0,0,0,0)"),
         shapes=shapes,
         annotations=all_annotations,
     )
@@ -900,7 +900,7 @@ def build_combo_figure():
         template="plotly_white",
         height=1000,
         margin=dict(t=80, b=200, l=60, r=20),
-        legend=dict(orientation="h", yanchor="top", y=-0.15, xanchor="center", x=0.5, font=dict(size=10)),
+        legend=dict(orientation="h", yanchor="top", y=-0.15, xanchor="center", x=0.5, font=dict(size=10), bgcolor="rgba(0,0,0,0)"),
         annotations=annotations,
     )
     return fig

@@ -383,6 +383,7 @@ def build_figure():
         legend=dict(
             title=dict(text="Cargo (click to toggle)", font=dict(size=12)),
             font=dict(size=10),
+            bgcolor="rgba(0,0,0,0)",
             tracegroupgap=2,
             itemclick="toggle",
             itemdoubleclick="toggleothers",
