@@ -234,6 +234,7 @@ def build_dashboard_html(
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>NAIS Dashboard — North American Industry Set</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚂</text></svg>">
     <script src="https://cdn.plot.ly/plotly-3.0.1.min.js"></script>
     <style>
         *, *::before, *::after {{
