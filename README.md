@@ -1,5 +1,7 @@
 # NAIS Analysis Dashboard
 
+**[Live Dashboard →](https://allenator.github.io/nais-analysis/)**
+
 Interactive analysis and visualization of the [NAIS (North American Industry Set)](https://www.tt-forums.net/viewtopic.php?t=84039) for [OpenTTD](https://www.openttd.org/). Extracts industry and cargo definitions directly from the NAIS source code, generates a structured JSON dataset, and produces a unified Plotly dashboard.
 
 ## Dashboard Views

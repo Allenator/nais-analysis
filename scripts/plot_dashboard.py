@@ -460,7 +460,9 @@ def build_dashboard_html(
         Built with <a href="https://plotly.com/python/">Plotly</a> ·
         By <a href="https://github.com/Allenator">Allenator</a>
         <br>
-        NAIS commit: <code>{commit_nais}</code> · Dashboard commit: <code>{commit_dashboard}</code>
+        Latest: <a href="https://allenator.github.io/nais-analysis/">allenator.github.io/nais-analysis</a> ·
+        NAIS commit: <code>{commit_nais}</code> · Dashboard commit: <code>{commit_dashboard}</code> ·
+        <a href="https://www.gnu.org/licenses/old-licenses/gpl-2.0.html">GPL v2</a>
     </div>
     <script>
         function switchTab(tabId) {{
